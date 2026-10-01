@@ -1,9 +1,0 @@
-Készítse el a mintákban látható rácsszerkezetet, 
-ügyeljen arra, hogy a különböző ablakméretektől függően azok szerkezete responsivan változzon meg
-A színeket a mintán láthatja, ezekehez hozzon létre saját osztályokat az oldal fej részében.
-
-lg méret esetén a konténer elemek 3 oszlopban(lásd minta)
-md méret esetén a konténer elemek 2 oszlopban(lásd minta)
-md alatti méret esetén 1 oszlopban egymás alatt jelenlenek meg
-
-Megjegyzés: a konténer elemek magassága: 50vh;
