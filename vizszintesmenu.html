@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vizszintes menű</title>
+    <style>
+        @keyframes anim {
+            from {
+                background-color: #ff9f43;
+
+            }
+
+            to {
+                background-color: #EE5A24;
+                border: 5px solid black;
+            }
+        }
+
+        body {
+            background-image: linear-gradient(to right, orange, red);
+            box-sizing: border-box;
+
+        }
+
+        #flex {
+            display: flex;
+            width: 900px;
+            margin: 0 auto;
+            justify-content: center;
+
+
+        }
+
+        a {
+            display: inline-block;
+            box-sizing: border-box;
+            color: white;
+            text-decoration: none;
+            font-size: 18px;
+            width: 250px;
+            height: 45px;
+            border: 5px solid gray;
+            border-radius: 10px;
+            background-color: #ff9f43;
+            text-align: center;
+            padding-top: 7px;
+            margin: 10px;
+        }
+
+        a:hover {
+            animation-name: anim;
+            animation-duration: 2s;
+            animation-fill-mode: both;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="flex">
+        <a href="https://developer.mozilla.org/en-US/docs/Web/HTML" target="_blank"> HTML, dokumentációk</a>
+        <a href="https://developer.mozilla.org/en-US/docs/Web/CSS" target="_blank">CSS dokumentációk</a>
+        <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript" target="_blank">JavaScript</a>
+    </div>
+</body>
+
+</html>

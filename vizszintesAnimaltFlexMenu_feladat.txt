@@ -1,0 +1,27 @@
+Készítse el az alábbi menüt a minta segítségével:
+A menü az oldal közepére kerüljön, színe színátmenetes, narancsságrából pirosba, a színátmenet irányát a mintából megállapíthatja.
+
+Hozzon létre gombokat, likek segítségével(a) melyekre a következők legyenek igazak
+
+A menük gombjai az alábbi linkekre mutasson, melyek, ÚJ ablakban nyíljanak meg:
+
+https://developer.mozilla.org/en-US/docs/Web/HTML
+https://developer.mozilla.org/en-US/docs/Web/CSS
+https://developer.mozilla.org/en-US/docs/Web/JavaScript
+
+A gombok linkek tulajdonságai:
+háttérszínük #ff9f43;
+betűszínük fehér;
+betűmérete: 18 pixel nagyságú
+a gomb szegélye szürke "gray" színű folyamatos vonal legyen.
+
+A padding, margó és szélesség értékeket próbálja önállóan beállítani, a menü gombjai az oldal közepén helyezkedjenek el!
+
+A menüben lévő elemeket flexbox segítségével rendezze vízszintes igazításúvá
+
+Ha az adott gomb felé megyünk egérrel, akkor hajtódjon végre egy animáció, ami a gomb
+háttérszítnét: #EE5A24;
+szegélyét fekete színűre állítja
+
+
+
