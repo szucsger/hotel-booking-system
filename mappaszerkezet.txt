@@ -1,0 +1,48 @@
+lumen-hotel/
+│
+├── public/                         # Nyilvánosan elérhető gyökérmappa (Document Root)
+│   ├── index.php                   # Főoldal (Hero szekció, gyorskereső sáv, kiemelt ajánlatok)
+│   │
+│   ├── css/                        # Stíluslapok
+│   │   ├── variables.css           # CSS változók (Lumen színpaletta, status színkódok)
+│   │   ├── main.css                # Globális elrendezés és Serif tipográfia
+│   │   ├── components.css          # Újrahasznosítható elemek (gombok, kártyák, status badge-ek)
+│   │   └── portal.css              # Admin és Vendég portál oldalsávok (sidebar) és dashboard elrendezések
+│   │
+│   ├── js/                         # Kliensoldali szkriptek
+│   │   └── main.js                 # Interakciók, modal-ok és status toggle események
+│   │
+│   ├── assets/                     # Képek, ikonok és logók
+│   │
+│   └── pages/                      # Az aloldalak moduláris szerkezete
+│       │
+│       ├── public/                 # Publikus látogatói oldalak (Felső navigációs kerettel)
+│       │   ├── rooms/
+│       │   │   ├── list.php        # Szobák listája (Deluxe king, Panorámás lakosztály, Családi szoba)
+│       │   │   └── detail.php      # Szoba adatlapja, kalkuláció és a foglalást indító űrlap
+│       │   ├── services.php        # Szolgáltatások (Concierge, Reggeli az ágyban, Wellness)
+│       │   ├── about.php           # Rólunk / Ismertető oldal
+│       │   └── contact.php         # Kapcsolati adatok és "Írjon nekünk" űrlap
+│       │
+│       ├── auth/                   # Hitelesítési modul
+│       │   ├── login.php           # Bejelentkezési űrlap és hitelesítés
+│       │   └── register.php        # Új vendég regisztrációja
+│       │
+│       ├── guest/                  # Vendég Portál
+│       │   └── dashboard.php       # Aktuális foglalás adatai (#LM-2048), időpontok és gyorsszolgáltatások
+│       │
+│       └── admin/                  # Összevont Admin & Recepció Portál
+│           └── dashboard.php       # Szobamátrix (101–204), kihasználtsági mutató és Check-in táblázat
+│
+└── src/                            # Védett backend mappa (böngészőből közvetlenül nem érhető el)
+    ├── config/
+    │   └── db.php                  # PDO adatbázis csatlakozás és beállítások
+    │
+    ├── helpers/
+    │   └── functions.php           # Segédfüggvények (biztonsági tisztítás, dátum- és árformázás)
+    │
+    └── includes/                   # Újrahasznosítható HTML/PHP keret-elemek
+        ├── header.php              # Publikus felső fejléc (LUMEN logó + felső menü)
+        ├── footer.php              # Publikus lábléc
+        ├── sidebar-guest.php       # Vendég portál bal oldali navigációja (LUMEN GUEST PORTAL)
+        └── sidebar-admin.php       # Admin/Recepció bal oldali navigációja (LUMEN STAFF PORTAL)

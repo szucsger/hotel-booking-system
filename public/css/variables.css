@@ -1,0 +1,76 @@
+:root {
+  /* ==========================================
+       1. FŐ HÁTTÉRSZÍNEK (Backgrounds)
+       ========================================== */
+  --color-bg-main: #f8f6f2; /* Főoldali krém / off-white háttér */
+  --color-bg-surface-white: #ffffff; /* Fehér kártyák, modulok, beviteli mezők */
+  --color-bg-surface-tan: #ebe5dc; /* Meleg homok/mogyoró konténer (pl. Kapcsolat űrlap) */
+  --color-bg-surface-sand: #eaddc8; /* Kiemelt bézs modul (pl. Recepcio / Vendég kérések) */
+
+  /* ==========================================
+       2. SÖTÉT TÉMA & MENÜSÁV (Dark Theme / Sidebar)
+       ========================================== */
+  --color-dark-bg: #302f28; /* Sötét szenes-olíva oldalsáv, hero kártyák, sötét gombok */
+  --color-dark-surface: #45443e; /* Kijelölt menüpont az oldalsávban, belső dobozok */
+  --color-dark-tile: #434138; /* Vendégportál dátum csempék háttérszíne */
+  --color-dark-hover: #25241f; /* Sötét elemek hover állapota */
+
+  /* ==========================================
+       3. GOMBOK ÉS KIEMELÉSEK (Buttons & Accents)
+       ========================================== */
+  --color-accent-gold: #cea474; /* Arany alcímek (KAPCSOLAT, ÉLŐ ÁLLAPOT) */
+  --color-accent-gold-bg: #d9b98c; /* Arany gomb háttérszín (pl. Regisztráció) */
+  --color-accent-gold-hover: #c8a87c; /* Arany gomb hover állapota */
+
+  --color-btn-dark-bg: #302f28; /* Sötét akció gombok (Check-in, Üzenet küldése) */
+  --color-btn-dark-text: #ffffff; /* Fehér felirat sötét gombokon */
+  --color-btn-outline-border: #e0dcd5; /* Keretes gomb szegélye (pl. Belépés) */
+
+  /* ==========================================
+       4. SZOBA- ÉS FOGLALÁSI STÁTUSZOK (Status Colors)
+       ========================================== */
+  /* Szabad (Available / Free) */
+  --color-status-free-bg: #e1e8dc; /* Szabad szoba kártya háttér */
+  --color-status-free-badge: #d8e2d2; /* Szabad badge háttér */
+  --color-status-free-text: #3d5a38; /* Zöld státusz felirat */
+
+  /* Foglalt (Occupied / Booked) */
+  --color-status-occupied-bg: #ead9c4; /* Foglalt szoba kártya háttér */
+  --color-status-occupied-badge: #f0dfd1; /* Foglalt badge háttér */
+  --color-status-occupied-text: #8c5a2b; /* Bronz/Barna státusz felirat */
+
+  /* Takarítás alatt (Cleaning) */
+  --color-status-cleaning-bg: #e5e1d8; /* Takarítás kártya háttér */
+  --color-status-cleaning-badge: #ddd9cf; /* Takarítás badge háttér */
+  --color-status-cleaning-text: #58544b; /* Szürke státusz felirat */
+
+  /* Megerősítve / Érkezik ma (Confirmed Badges) */
+  --color-status-confirmed-bg: #e5efdf; /* Zöldes-fehér badge háttér */
+  --color-status-confirmed-text: #3d5a38; /* Zöld badge szöveg */
+
+  /* ==========================================
+       5. TIPOGRÁFIA ÉS SZÖVEGSZÍNEK (Typography)
+       ========================================== */
+  --color-text-primary: #302f28; /* Főcímsorok (H1, H2, H3) és főszövegek */
+  --color-text-secondary: #666459; /* Másodlagos leíró szövegek, opciók */
+  --color-text-muted: #928f83; /* Halvány címkék, táblázat fejlécek */
+  --color-text-white: #ffffff; /* Fehér szöveg sötét alapon */
+  --color-text-light-muted: #b5b3a8; /* Halvány szöveg sötét alapon (pl. admin oldalsáv) */
+
+  /* ==========================================
+       6. DIAGRAMOK, KERETEK ÉS MŰVELETEK (Charts & Borders)
+       ========================================== */
+  --color-chart-gold-ring: #cfad7b; /* Kördiagram aktív íve (75%) */
+  --color-chart-track-ring: #525353; /* Kördiagram háttér pályája */
+
+  --color-border-light: #e8e3da; /* Kártyák és elválasztó vonalak kerete */
+  --color-border-dark: #434138; /* Sötét oldalsáv belső elválasztói */
+
+  --color-input-bg: #ffffff; /* Űrlap beviteli mezők háttere */
+  --color-input-border: #e2ddd5; /* Beviteli mező kerete */
+  --color-input-placeholder: #b8b4a9; /* Útmutató szöveg az űrlapban */
+
+  /* Betűtípusok */
+  --font-heading: "Playfair Display", "Georgia", serif;
+  --font-body: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+}
