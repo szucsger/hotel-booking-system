@@ -2,7 +2,7 @@
   /* ==========================================
        1. FŐ HÁTTÉRSZÍNEK (Backgrounds)
        ========================================== */
-  --color-bg-main: #f8f6f2; /* Főoldali krém / off-white háttér */
+  --color-bg-main: #f8f6f2; /* Főoldali off-white háttér */
   --color-bg-surface-white: #ffffff; /* Fehér kártyák, modulok, beviteli mezők */
   --color-bg-surface-tan: #ebe5dc; /* Meleg homok/mogyoró konténer (pl. Kapcsolat űrlap) */
   --color-bg-surface-sand: #eaddc8; /* Kiemelt bézs modul (pl. Recepcio / Vendég kérések) */
@@ -20,7 +20,7 @@
        ========================================== */
   --color-accent-gold: #cea474; /* Arany alcímek (KAPCSOLAT, ÉLŐ ÁLLAPOT) */
   --color-accent-gold-bg: #d9b98c; /* Arany gomb háttérszín (pl. Regisztráció) */
-  --color-accent-gold-hover: #c8a87c; /* Arany gomb hover állapota */
+  --color-accent-gold-hover: #e6b066; /* Arany gomb hover állapota */
 
   --color-btn-dark-bg: #302f28; /* Sötét akció gombok (Check-in, Üzenet küldése) */
   --color-btn-dark-text: #ffffff; /* Fehér felirat sötét gombokon */
