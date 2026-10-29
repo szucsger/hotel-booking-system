@@ -11,12 +11,11 @@ unset($_SESSION['success']);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
-    $pdo = getDatabaseConnection();
-
     if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
         $error = 'Hibás email vagy jelszó.';
     } else {
         try {
+            $pdo = getDatabaseConnection();
             $user = AuthService::authenticate(
                 $pdo,
                 $email,
