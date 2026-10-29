@@ -26,6 +26,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'A jelszónak legalább 8 karakter hosszúnak kell lennie.';
     }
 
+    if ($data['name'] === '') {
+        $error = 'A név megadása kötelező.';
+    }
+
     if ($error === null) {
         try {
             $pdo = getDatabaseConnection();
@@ -34,8 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             header('Location: /hotel-booking-system/public/pages/auth/login.php');
             exit;
         } catch (Exception $exception) {
-            error_log($exception->getMessage());
-            $error = 'A regisztráció nem sikerült. Ellenőrizd az adatokat, vagy próbáld újra később.';
+            error_log($exception->getMessage());
+
+            $error = 'A regisztráció nem sikerült. Ellenőrizd az adatokat, vagy próbáld újra később.';
+
         }
     }
 
