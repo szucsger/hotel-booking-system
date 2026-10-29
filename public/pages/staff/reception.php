@@ -1,506 +1,52 @@
 <?php
 session_start();
-include_once('../../../src/config/db.php');
+// Ellenőrzi a felhasználó hitelesítését a munkamenet alapján.
+require_once __DIR__ . '/../../../src/services/authservice.php';
 
-$guestSearchSubmitted = false;
-$guestSearchTerm = '';
-$guestResults = [];
-$roomStatusMessage = '';
+// Ellenőrzi, hogy a felhasználó rendelkezik-e a megfelelő szerepkörrel az oldal megtekintéséhez.
+$user = AuthService::getAuthenticatedUser();
 
-if (isset($_SESSION['room_status_message'])) {
-    $roomStatusMessage = $_SESSION['room_status_message'];
-    unset($_SESSION['room_status_message']);
+if (
+    $user === null
+    || !AuthService::hasRole(['admin', 'receptionist'])
+) {
+    http_response_code(403);
+    exit('Nincs jogosultságod az oldal megtekintéséhez.');
 }
 
-if (isset($_SESSION['guest_search_result'])) {
-    $searchResult = $_SESSION['guest_search_result'];
-    unset($_SESSION['guest_search_result']);
-
-    if (is_array($searchResult)) {
-        $guestSearchSubmitted = true;
-        $guestSearchTerm = $searchResult['term'] ?? '';
-        $guestResults = $searchResult['results'] ?? [];
-    }
+// A szerveroldali API-kéréseket csak az oldal munkamenetéhez tartozó tokennel fogadjuk el.
+if (!isset($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
 
+require_once __DIR__ . '/../../../src/config/pdo.php';
+require_once __DIR__ . '/../../../src/services/receptionservice.php';
+
+// Az adatbázis-lekérdezéseket a szolgáltatás végzi; ez a fájl az eredményt a nézetnek készíti elő.
 try {
-
- $pdo = new PDO("mysql:host=$host;dbname=$db", $user, $pass);
- $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-// Vendégkeresési kérések kezelése
-if ($_SERVER['REQUEST_METHOD'] === 'POST'
-    && ($_POST['action'] ?? '') === 'search_guest') {
-
-    $guestSearchTerm = trim((string) ($_POST['search_guest_name'] ?? ''));
-    $guestResults = [];
-
-    if ($guestSearchTerm !== '') {
-        $stmt = $pdo->prepare("
-            SELECT name, email, phone_number
-            FROM users
-            WHERE role = 'user'
-            AND is_deleted = 0
-            AND (name LIKE :search_name OR email LIKE :search_email)
-            ORDER BY name
-            LIMIT 20
-        ");
-        $searchPattern = '%' . $guestSearchTerm . '%';
-        $stmt->execute([
-            'search_name' => $searchPattern,
-            'search_email' => $searchPattern,
-        ]);
-        $guestResults = $stmt->fetchAll(PDO::FETCH_ASSOC);
-    }
-
-    $_SESSION['guest_search_result'] = [
-        'term' => $guestSearchTerm,
-        'results' => $guestResults,
-    ];
-    header('Location: reception.php');
-    exit;
+    $dashboard = ReceptionService::getDashboard(getDatabaseConnection());
+} catch (PDOException $e) {
+    error_log($e->getMessage());
+    http_response_code(500);
+    exit('Az oldal adatai jelenleg nem tölthetők be.');
 }
 
-// Új foglalási kérelmek kezelése
-if ($_SERVER['REQUEST_METHOD'] === 'POST'
-    && ($_POST['action'] ?? '') === 'available_rooms') {
-
-    $sendAvailabilityResponse = function ($success, $rooms, $message, $statusCode = 200) {
-        http_response_code($statusCode);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode([
-            'success' => $success,
-            'rooms' => $rooms,
-            'message' => $message,
-        ], JSON_UNESCAPED_UNICODE);
-        exit;
-    };
-
-    $checkInValue = $_POST['check_in_date'] ?? '';
-    $checkOutValue = $_POST['check_out_date'] ?? '';
-    $guestCount = filter_var($_POST['guest_count'] ?? null, FILTER_VALIDATE_INT);
-    $checkIn = DateTimeImmutable::createFromFormat('!Y-m-d', $checkInValue);
-    $checkOut = DateTimeImmutable::createFromFormat('!Y-m-d', $checkOutValue);
-
-    if (
-        !$checkIn
-        || !$checkOut
-        || $checkIn->format('Y-m-d') !== $checkInValue
-        || $checkOut->format('Y-m-d') !== $checkOutValue
-        || $checkIn < new DateTimeImmutable('today')
-        || $checkOut <= $checkIn
-        || $guestCount === false
-        || $guestCount < 1
-    ) {
-        $sendAvailabilityResponse(false, [], 'Adj meg érvényes érkezési és távozási dátumot, valamint vendégszámot.', 422);
-    }
-
-    $stmt = $pdo->prepare("
-        SELECT rooms.id, rooms.room_number, room_types.name AS room_type
-        FROM rooms
-        JOIN room_types ON room_types.id = rooms.room_type_id
-        WHERE room_types.capacity >= :guest_count
-          AND rooms.status NOT IN ('cleaning', 'maintenance')
-          AND (:arrival_date > CURDATE() OR rooms.status = 'free')
-          AND NOT EXISTS (
-              SELECT 1
-              FROM bookings
-              WHERE bookings.room_id = rooms.id
-                AND bookings.status IN ('pending', 'confirmed', 'checked_in')
-                AND bookings.check_in_date < :new_check_out
-                AND bookings.check_out_date > :new_check_in
-          )
-        ORDER BY rooms.room_number
-    ");
-    $stmt->execute([
-        'guest_count' => $guestCount,
-        'arrival_date' => $checkInValue,
-        'new_check_out' => $checkOutValue,
-        'new_check_in' => $checkInValue,
-    ]);
-    $availableRooms = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-    $sendAvailabilityResponse(
-        true,
-        $availableRooms,
-        empty($availableRooms) ? 'Erre az időszakra nincs szabad, megfelelő kapacitású szoba.' : ''
-    );
-}
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST'
-    && ($_POST['action'] ?? '') === 'new_booking') {
-
-    $sendBookingResponse = function ($success, $message, $statusCode = 200) {
-        http_response_code($statusCode);
-        header('Content-Type: application/json; charset=utf-8');
-        echo json_encode([
-            'success' => $success,
-            'message' => $message,
-        ], JSON_UNESCAPED_UNICODE);
-        exit;
-    };
-
-    $guestName = trim((string) ($_POST['guest_name'] ?? ''));
-    $guestEmail = trim((string) ($_POST['guest_email'] ?? ''));
-    $guestCount = filter_var($_POST['guest_count'] ?? null, FILTER_VALIDATE_INT);
-    $roomId = filter_var($_POST['room_id'] ?? null, FILTER_VALIDATE_INT);
-    $checkInValue = $_POST['check_in_date'] ?? '';
-    $checkOutValue = $_POST['check_out_date'] ?? '';
-
-    if (
-        $guestName === ''
-        || !filter_var($guestEmail, FILTER_VALIDATE_EMAIL)
-        || $guestCount === false
-        || $guestCount < 1
-        || !$roomId
-    ) {
-        $sendBookingResponse(false, 'Ellenőrizd a megadott adatokat.', 422);
-    }
-
-    $checkIn = DateTimeImmutable::createFromFormat('!Y-m-d', $checkInValue);
-    $checkOut = DateTimeImmutable::createFromFormat('!Y-m-d', $checkOutValue);
-
-    if (
-        !$checkIn
-        || !$checkOut
-        || $checkIn->format('Y-m-d') !== $checkInValue
-        || $checkOut->format('Y-m-d') !== $checkOutValue
-        || $checkIn < new DateTimeImmutable('today')
-        || $checkOut <= $checkIn
-    ) {
-        $sendBookingResponse(false, 'A dátumok érvénytelenek.', 422);
-    }
-
-    $pdo->beginTransaction();
-
-    try {
-        $stmt = $pdo->prepare("
-            SELECT id
-            FROM users
-            WHERE name = :name
-              AND email = :email
-              AND role = 'user'
-              AND is_deleted = 0
-            LIMIT 1
-        ");
-        $stmt->execute([
-            'name' => $guestName,
-            'email' => $guestEmail,
-        ]);
-        $guestId = $stmt->fetchColumn();
-
-        if ($guestId === false) {
-            throw new RuntimeException('Nem található ilyen regisztrált vendég.');
-        }
-
-        $stmt = $pdo->prepare("
-                        SELECT rooms.id, room_types.capacity, room_types.price_per_night
-            FROM rooms
-            JOIN room_types ON room_types.id = rooms.room_type_id
-                        WHERE rooms.id = :room_id
-                            AND rooms.status NOT IN ('cleaning', 'maintenance')
-                            AND room_types.capacity >= :guest_count
-              AND (:arrival_date > CURDATE() OR rooms.status = 'free')
-            FOR UPDATE
-        ");
-        $stmt->execute([
-                        'room_id' => $roomId,
-                        'guest_count' => $guestCount,
-            'arrival_date' => $checkInValue,
-        ]);
-        $room = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$room) {
-                        throw new RuntimeException('A kiválasztott szoba nem elérhető erre az időszakra vagy nem megfelelő a kapacitása.');
-        }
-
-        $stmt = $pdo->prepare("
-            SELECT COUNT(*)
-            FROM bookings
-            WHERE room_id = :room_id
-              AND status IN ('pending', 'confirmed', 'checked_in')
-              AND check_in_date < :new_check_out
-              AND check_out_date > :new_check_in
-        ");
-        $stmt->execute([
-            'room_id' => $room['id'],
-            'new_check_out' => $checkOutValue,
-            'new_check_in' => $checkInValue,
-        ]);
-
-        if ((int) $stmt->fetchColumn() > 0) {
-            throw new RuntimeException('A szoba már foglalt erre az időszakra.');
-        }
-
-        $nights = $checkIn->diff($checkOut)->days;
-        $totalPrice = $nights * (int) $room['price_per_night'];
-
-        $stmt = $pdo->prepare("
-            INSERT INTO bookings
-                (user_id, room_id, check_in_date, check_out_date,
-                guest_count, total_price, status)
-            VALUES
-                (:user_id, :room_id, :check_in_date, :check_out_date,
-                :guest_count, :total_price, 'confirmed')
-        ");
-        $stmt->execute([
-            'user_id' => $guestId,
-            'room_id' => $room['id'],
-            'check_in_date' => $checkInValue,
-            'check_out_date' => $checkOutValue,
-            'guest_count' => $guestCount,
-            'total_price' => $totalPrice,
-        ]);
-
-        $pdo->commit();
-    } catch (RuntimeException $e) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-
-        $sendBookingResponse(false, $e->getMessage(), 409);
-    } catch (Throwable $e) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-
-        error_log($e->getMessage());
-        $sendBookingResponse(false, 'A foglalás mentése nem sikerült.', 500);
-    }
-
-    $sendBookingResponse(true, 'A foglalás sikeresen rögzítve.');
-}
-
-// Szobastátusz módosítása
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'modify_room_status') {
-
-    $roomId = filter_var($_POST['room_id'] ?? null, FILTER_VALIDATE_INT);
-    $newStatus = $_POST['room_status'] ?? '';
-    $allowedStatuses = ['free', 'occupied', 'cleaning', 'maintenance'];
-
-    if (!$roomId || !in_array($newStatus, $allowedStatuses, true)) {
-        die('Érvénytelen szoba vagy státusz.');
-    }
-    
-    $pdo->beginTransaction();
-
-    try {
-        $stmt = $pdo->prepare("SELECT id, status FROM rooms WHERE id = :room_id FOR UPDATE");
-        $stmt->execute(['room_id' => $roomId]);
-        $room = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if(!$room) {
-            throw new RuntimeException('A szoba nem található.');
-        }
-        $stmt = $pdo->prepare("SELECT COUNT(*) FROM bookings WHERE room_id = :room_id AND status = 'checked_in'");
-        $stmt->execute(['room_id' => $room['id']]);
-
-        if((int) $stmt->fetchColumn() > 0) {    
-            throw new RuntimeException('Bejelentkezett vendég szobájának státusza nem módosítható.');
-        }
-        $stmt = $pdo->prepare("UPDATE rooms SET status = :status WHERE id = :room_id");
-        $stmt->execute([
-            'status' => $newStatus,
-            'room_id' => $room['id'],
-        ]);
-        $pdo->commit();
-        $_SESSION['room_status_message'] = 'A szoba státusza sikeresen módosult.';
-    } catch (Throwable $e) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        if ($e instanceof RuntimeException) {
-            die(htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8'));
-        }
-        throw $e;
-    }
-    header('Location: reception.php');
-    exit;
-}
-
- // Bejelentkezési kérelmek kezelése
-if ($_SERVER['REQUEST_METHOD'] === 'POST'
-    && ($_POST['action'] ?? '') === 'check_in') {
-
-    $bookingId = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
-
-    if (!$bookingId) {
-        die('Érvénytelen foglalásazonosító.');
-    }
-
-    $pdo->beginTransaction();
-
-    try {
-        $stmt = $pdo->prepare("
-            SELECT room_id
-            FROM bookings
-            WHERE id = :id
-            AND status = 'confirmed'
-            AND check_in_date <= CURDATE()
-            FOR UPDATE
-        ");
-        $stmt->execute(['id' => $bookingId]);
-        $booking = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$booking) {
-            $pdo->rollBack();
-            die('A foglalás nem található, vagy még nem érkezhetett meg.');
-        }
-
-        $stmt = $pdo->prepare("
-            UPDATE bookings
-            SET status = 'checked_in'
-            WHERE id = :id
-        ");
-        $stmt->execute(['id' => $bookingId]);
-
-        $stmt = $pdo->prepare("
-            UPDATE rooms
-            SET status = 'occupied'
-            WHERE id = :room_id
-        ");
-        $stmt->execute(['room_id' => $booking['room_id']]);
-
-        $pdo->commit();
-
-        header('Location: reception.php');
-        exit;
-    } catch (Throwable $e) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        throw $e;
-    }
-}
-// Kijelentkezési kérelmek kezelése
-if ($_SERVER['REQUEST_METHOD'] === 'POST'
-    && ($_POST['action'] ?? '') === 'check_out') {
-
-    $bookingId = filter_input(INPUT_POST, 'booking_id', FILTER_VALIDATE_INT);
-
-    if (!$bookingId) {
-        die('Érvénytelen foglalásazonosító.');
-    }
-
-    $pdo->beginTransaction();
-
-    try {
-        $stmt = $pdo->prepare("
-            SELECT room_id
-            FROM bookings
-            WHERE id = :id
-            AND status = 'checked_in'
-            AND check_out_date <= CURDATE()
-            FOR UPDATE
-        ");
-        $stmt->execute(['id' => $bookingId]);
-        $booking = $stmt->fetch(PDO::FETCH_ASSOC);
-
-        if (!$booking) {
-            $pdo->rollBack();
-            die('A foglalás nem található, vagy a vendég nincs bejelentkezve.');
-        }
-
-        $stmt = $pdo->prepare("
-            UPDATE bookings
-            SET status = 'checked_out'
-            WHERE id = :id
-        ");
-        $stmt->execute(['id' => $bookingId]);
-
-        $stmt = $pdo->prepare("
-            UPDATE rooms
-            SET status = 'cleaning'
-            WHERE id = :room_id
-        ");
-        $stmt->execute(['room_id' => $booking['room_id']]);
-
-        $pdo->commit();
-
-        header('Location: reception.php');
-        exit;
-    } catch (Throwable $e) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        throw $e;
-    }
-}
-// A mai érkezések, távozások és szabad szobák számának lekérése
- $stmt = $pdo->query("SELECT COUNT(*) AS today_arrivals FROM bookings WHERE check_in_date = CURDATE() AND status = 'confirmed'");
- $today_arrivals = (int) $stmt->fetchColumn();
- $stmt = $pdo->query("SELECT COUNT(*) AS today_departures FROM bookings WHERE check_out_date = CURDATE() AND status = 'confirmed'");
- $today_departures = (int) $stmt->fetchColumn();
-
- $stmt = $pdo->query("
-    SELECT COUNT(*) AS available_rooms
-    FROM rooms
-    WHERE rooms.status = 'free'
-      AND NOT EXISTS (
-          SELECT 1
-          FROM bookings
-          WHERE bookings.room_id = rooms.id
-            AND bookings.status IN ('pending', 'confirmed', 'checked_in')
-            AND bookings.check_in_date <= CURDATE()
-            AND bookings.check_out_date > CURDATE()
-      )
-");
- $available_rooms = (int) $stmt->fetchColumn();
-
- $messages = 0;
-// Az érkező vendégek adatainak lekérése
-$stmt = $pdo->prepare("
-    SELECT bookings.id AS booking_id, users.name AS  guest_name, rooms.room_number, room_types.name AS room_type, bookings.check_in_date
-    FROM bookings
-    JOIN users ON users.id = bookings.user_id
-    JOIN rooms ON rooms.id = bookings.room_id
-    JOIN room_types ON room_types.id = rooms.room_type_id
-    WHERE bookings.check_in_date >= :check_in_date
-    AND bookings.status = 'confirmed'
-    ORDER BY bookings.check_in_date ASC, rooms.room_number ASC
-");
-$stmt->execute(['check_in_date' => date('Y-m-d')]);
-$arrivals = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// A mai távozó vendégek adatainak lekérése
-$stmt = $pdo->prepare("
-    SELECT bookings.id AS booking_id, users.name AS guest_name, rooms.room_number, room_types.name AS room_type, bookings.check_out_date, bookings.status
-    FROM bookings
-    JOIN users ON users.id = bookings.user_id
-    JOIN rooms ON rooms.id = bookings.room_id
-    JOIN room_types ON room_types.id = rooms.room_type_id
-    WHERE bookings.check_out_date = :check_out_date
-    AND bookings.status IN ('confirmed', 'checked_in')
-    ORDER BY rooms.room_number
-");
-$stmt->execute(['check_out_date' => date('Y-m-d')]);
-$departures = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-$stmt = $pdo->query("
-    SELECT rooms.id, rooms.room_number, rooms.status
-    FROM rooms
-    WHERE NOT EXISTS (
-        SELECT 1
-        FROM bookings
-        WHERE bookings.room_id = rooms.id
-        AND bookings.status = 'checked_in'
-    )
-    ORDER BY rooms.room_number
-");
-$roomsForStatusChange = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$today_arrivals = $dashboard['today_arrivals'];
+$today_departures = $dashboard['today_departures'];
+$available_rooms = $dashboard['available_rooms'];
+$arrivals = $dashboard['arrivals'];
+$departures = $dashboard['departures'];
+$roomsForStatusChange = $dashboard['rooms_for_status_change'];
 $roomStatusLabels = [
     'free' => 'Szabad',
     'cleaning' => 'Takarítás',
     'maintenance' => 'Karbantartás',
     'occupied' => 'Foglalt',
 ];
-
-} catch (PDOException $e) {
-    die("Adatbázis hiba: " . $e->getMessage());
-    }
+$roomStatusMessage = $_SESSION['room_status_message'] ?? '';
+unset($_SESSION['room_status_message']);
+$apiUrl = rtrim(dirname(dirname(dirname($_SERVER['SCRIPT_NAME']))), '/') . '/api/router.php';
 ?>
-
-
 <!DOCTYPE html>
 <html lang="hu">
 
@@ -516,9 +62,15 @@ $roomStatusLabels = [
 
 <body>
     <header class="reception-header py-4">
-        <div class="container reception-header-inner">
+        <div class="reception-header-inner">
+            <div class="container">
             <div class="reception-topline">
-                <div> Recepció · <span id="current-day"></span>
+                <div class="reception-topline-row">
+                    <div> Recepció · <span id="current-day"></span>
+                    </div>
+                    <form action="../../pages/auth/logout.php" method="post">
+                        <button class="btn button-logout" id="logout-button" type="submit">Kijelentkezés</button>
+                    </form>
                 </div>
                 <div class="reception-header-row">
                     <div class="reception-title-group">
@@ -530,12 +82,13 @@ $roomStatusLabels = [
                     </div>
                 </div>
             </div>
+            </div>
         </div>
         </div>
     </header>
 
     <main class="container my-4 reception-body">
-        <!-- Info cards section -->
+        <!-- A napi érkezések, távozások és szabad szobák összesítése. -->
         <div class="row g-3">
             <div class="col-12 col-md-6 col-xl-4">
                 <div class="info-card">
@@ -565,7 +118,7 @@ $roomStatusLabels = [
                 </div>
             </div>
         </div>
-        <!-- Arrival panel section -->
+        <!-- Az érkezők listája és a hozzá tartozó check-in művelet. -->
         <div class="row g-3 ">
             <div class="col-12 col-lg-8">
                 <div class="arrival-panel">
@@ -616,10 +169,15 @@ $roomStatusLabels = [
                             </div>
 
                             <div class="col-3 col-md-3 arrival-action">
-                                <form method="post">
+                                <form method="post"
+                                    action="<?= htmlspecialchars($apiUrl, ENT_QUOTES, 'UTF-8') ?>"
+                                    data-reception-action>
+                                    <input type="hidden" name="csrf_token"
+                                        value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
                                     <input type="hidden" value="<?php echo (int) $arrival['booking_id']; ?>"
                                         name="booking_id">
-                                    <button type="submit" name="action" value="check_in" class="btn arrival-button">
+                                    <input type="hidden" name="action" value="reception.check_in">
+                                    <button type="submit" name="action" value="reception.check_in" class="btn arrival-button">
                                         Check-in
                                     </button>
                                 </form>
@@ -630,7 +188,7 @@ $roomStatusLabels = [
                     </div>
                 </div>
             </div>
-            <!-- Departure Panel -->
+            <!-- A mai távozók listája és a kijelentkezés művelete. -->
             <div class="col-12 col-lg-4">
                 <div class="departure-panel">
                     <h2 class="departure-title">Távozó vendégek</h2>
@@ -652,10 +210,15 @@ $roomStatusLabels = [
                             <?php echo htmlspecialchars($departure['guest_name']); ?>
                         </p>
                         <?php if ($departure['status'] === 'checked_in'): ?>
-                        <form method="post">
+                        <form method="post"
+                            action="<?= htmlspecialchars($apiUrl, ENT_QUOTES, 'UTF-8') ?>"
+                            data-reception-action>
+                            <input type="hidden" name="csrf_token"
+                                value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
                             <input type="hidden" name="booking_id"
                                 value="<?php echo (int) $departure['booking_id']; ?>">
-                            <button type="submit" name="action" value="check_out" class="btn departure-button">
+                            <input type="hidden" name="action" value="reception.check_out">
+                            <button type="submit" name="action" value="reception.check_out" class="btn departure-button">
                                 Kijelentkezés
                             </button>
                         </form>
@@ -667,10 +230,11 @@ $roomStatusLabels = [
                 </div>
             </div>
         </div>
+        <!-- Az itt található gombok nyitják meg a recepciós műveletek párbeszédablakait. -->
         <div class="operation-panel">
             <div class="operation-header">
                 <p class="operation-subtitle">Gyorsműveletek</p>
-                <h2 class="operation-title">Reception eszközök</h2>
+                <h2 class="operation-title">Recepciós eszközök</h2>
             </div>
             <div class="row g-3">
                 <div class="col-12 col-md-4">
@@ -699,11 +263,14 @@ $roomStatusLabels = [
                 </div>
             </div>
         </div>
-        <!-- Booking Modal -->
+        <!-- Az új foglalás mezőit és az időpont alapján lekért szobákat tartalmazó ablak. -->
         <dialog id="booking-modal" class="reception-modal" aria-labelledby="booking-modal-title">
             <h2 class="reception-modal-title" id="booking-modal-title">Új foglalás</h2>
             <div id="new-booking-message" class="alert" role="status" aria-live="polite" hidden></div>
-            <form method="post" action="<?= htmlspecialchars($_SERVER['SCRIPT_NAME'], ENT_QUOTES, 'UTF-8') ?>" id="new-booking-form" class="reception-modal-form">
+            <form method="post" action="<?= htmlspecialchars($apiUrl, ENT_QUOTES, 'UTF-8') ?>"
+                id="new-booking-form" class="reception-modal-form">
+                <input type="hidden" name="csrf_token"
+                    value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
                 <div class="reception-modal-field">
                     <label for="guest-name">Vendég neve:</label>
                     <input type="text" id="guest-name" name="guest_name" required>
@@ -722,7 +289,8 @@ $roomStatusLabels = [
                 </div>
                 <div class="reception-modal-field">
                     <label for="check-out-date">Kijelentkezés dátuma:</label>
-                    <input type="date" id="check-out-date" name="check_out_date" min="<?= date('Y-m-d', strtotime('+1 day')) ?>" required>
+                    <input type="date" id="check-out-date" name="check_out_date"
+                        min="<?= date('Y-m-d', strtotime('+1 day')) ?>" required>
                 </div>
                 <div class="reception-modal-field">
                     <label for="room-id">Szabad szoba:</label>
@@ -732,53 +300,52 @@ $roomStatusLabels = [
                     <small id="available-room-message" class="text-muted" role="status" aria-live="polite"></small>
                 </div>
                 <div class="reception-modal-actions">
-                    <button type="submit" name="action" value="new_booking" class="btn reception-modal-submit">Foglalás
+                    <button type="submit" name="action" value="reception.new_booking" class="btn reception-modal-submit" id="new-booking-submit">Foglalás
                         létrehozása</button>
                     <button type="button" class="btn reception-modal-cancel" id="close-booking-modal">Mégse</button>
                 </div>
             </form>
         </dialog>
+        <!-- Vendégkeresés és a szervertől érkező találatok megjelenítése. -->
         <dialog id="search-guest-modal" class="reception-modal" aria-labelledby="search-guest-modal-title">
             <h2 class="reception-modal-title" id="search-guest-modal-title">Vendég keresése</h2>
-            <form method="post" id="search-guest-form" class="reception-modal-form">
+            <form method="post" action="<?= htmlspecialchars($apiUrl, ENT_QUOTES, 'UTF-8') ?>"
+                id="search-guest-form"
+                class="reception-modal-form">
+                <input type="hidden" name="csrf_token"
+                    value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
                 <div class="reception-modal-field">
                     <label for="search-guest-name">Vendég neve vagy e-mail-címe:</label>
-                    <input type="text" id="search-guest-name" name="search_guest_name"
-                        value="<?= htmlspecialchars($guestSearchTerm, ENT_QUOTES, 'UTF-8') ?>" required>
+                    <input type="text" id="search-guest-name" name="search_guest_name" required>
                 </div>
-                <?php if ($guestSearchSubmitted): ?>
-                    <section class="guest-search-results">
-                        <h3>Találatok</h3>
-
-                        <?php if (empty($guestResults)): ?>
-                        <p>Nem találtam ilyen vendéget.</p>
-                <?php else: ?>
-                    <?php foreach ($guestResults as $guest): ?>
-                        <article class="guest-result">
-                            <h4><?= htmlspecialchars($guest['name']) ?></h4>
-                            <p><?= htmlspecialchars($guest['email']) ?></p>
-                            <p><?= htmlspecialchars($guest['phone_number'] ?? '') ?></p>
-                        </article>
-                    <?php endforeach; ?>
-                <?php endif; ?>
+                <section id="guest-search-results" class="guest-search-results" hidden>
+                    <h3>Találatok</h3>
+                    <div id="guest-search-result-list"></div>
                 </section>
-                <?php endif; ?>
+                <p id="guest-search-message" role="status" aria-live="polite"></p>
                 <div class="reception-modal-actions">
-                    <button type="submit" name="action" value="search_guest"
+                    <button type="submit" name="action" value="reception.search_guest"
                         class="btn reception-modal-submit">Keresés</button>
                     <button type="button" class="btn reception-modal-cancel"
                         id="close-search-guest-modal">Mégse</button>
                 </div>
             </form>
         </dialog>
+        <!-- A szoba státusza csak a szerveroldali ellenőrzés után módosul. -->
         <dialog id="modify-room-status-modal" class="reception-modal" aria-labelledby="modify-room-status-modal-title">
             <h2 class="reception-modal-title" id="modify-room-status-modal-title">Szobastátusz módosítása</h2>
+            <div id="room-status-message" class="alert" role="status" aria-live="polite" hidden></div>
             <?php if ($roomStatusMessage !== ''): ?>
             <div class="alert alert-success" role="status">
                 <?= htmlspecialchars($roomStatusMessage, ENT_QUOTES, 'UTF-8') ?>
             </div>
             <?php endif; ?>
-            <form method="post" id="modify-room-status-form" class="reception-modal-form">
+            <form method="post" action="<?= htmlspecialchars($apiUrl, ENT_QUOTES, 'UTF-8') ?>"
+                id="modify-room-status-form"
+                class="reception-modal-form" data-reception-action>
+                <input type="hidden" name="csrf_token"
+                    value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
+                <input type="hidden" name="action" value="reception.modify_room_status">
                 <div class="reception-modal-field">
                     <label for="room-id-status">Szoba:</label>
                     <select id="room-id-status" name="room_id" required>
@@ -786,7 +353,8 @@ $roomStatusLabels = [
                         <?php foreach ($roomsForStatusChange as $room): ?>
                         <option value="<?= (int) $room['id'] ?>">
                             <?= htmlspecialchars($room['room_number'], ENT_QUOTES, 'UTF-8') ?>
-                            (<?= htmlspecialchars($roomStatusLabels[$room['status']] ?? $room['status'], ENT_QUOTES, 'UTF-8') ?>)
+                            (
+                            <?= htmlspecialchars($roomStatusLabels[$room['status']] ?? $room['status'], ENT_QUOTES, 'UTF-8') ?>)
                         </option>
                         <?php endforeach; ?>
                     </select>
@@ -801,22 +369,17 @@ $roomStatusLabels = [
                     </select>
                 </div>
                 <div class="reception-modal-actions">
-                    <button type="submit" name="action" value="modify_room_status"
-                        class="btn reception-modal-submit">Módosítás</button>
+                    <button type="submit" name="action" value="reception.modify_room_status"
+                        class="btn reception-modal-submit" id="modify-room-status-submit">Módosítás</button>
                     <button type="button" class="btn reception-modal-cancel"
                         id="close-modify-room-status-modal">Bezárás</button>
                 </div>
             </form>
         </dialog>
     </main>
-
+    <?php require __DIR__ . '/../../../src/includes/footer.php'; ?>
     <script src="../../assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./staff.js"></script>
-    <?php if ($guestSearchSubmitted): ?>
-    <script>
-        document.querySelector("#search-guest-modal").showModal();
-    </script>
-    <?php endif; ?>
+    <script type="module" src="../../js/staff/reception.js"></script>
     <?php if ($roomStatusMessage !== ''): ?>
     <script>
         document.querySelector("#modify-room-status-modal").showModal();
