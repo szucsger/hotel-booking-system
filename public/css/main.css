@@ -1,13 +1,205 @@
-/* Reception page main styles */
+/* Header részben használt stílusok */
+.header-content {
+  background-color: var(--color-bg-surface-white);
+  border-bottom: 1px solid #e0e0e0;
+}
+.site-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.site-brand-link {
+  text-decoration: none;
+}
+
+.site-logo {
+  width: 50px;
+  height: auto;
+  border-radius: 50%;
+  flex: 0 0 50px;
+  border: 1px solid var(--color-accent-gold-bg);
+}
+
+.site-title {
+  margin: 0;
+  font-size: clamp(16px, 2vw, 24px);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  white-space: nowrap;
+  font-style: italic;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+}
+
+.nav-item a {
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.nav-item a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -5px;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-text-primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.nav-item a:hover {
+  color: var(--color-text-primary);
+  transform: translateY(-4px);
+}
+
+.nav-item a:hover::after {
+  transform: scaleX(1);
+}
+
+.header-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.header-form {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.nav-button {
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  border: 1px solid var(--color-accent-gold-bg);
+}
+
+.nav-button:hover {
+  color: #3b331b;
+  background-color: var(--color-accent-gold-bg);
+}
+/* Footer részben használt stílusok */
+.site-footer {
+  background-color: var(--color-bg-surface-white);
+  padding: 32px 0;
+  border-top: 1px solid #e0e0e0;
+}
+.site-footer .footer-content {
+  text-align: center;
+}
+.site-footer .footer-content p {
+  margin: 4px 0;
+  color: var(--color-text-muted);
+}
+.footer-brand-name {
+  font-weight: 600;
+  font-size: 18px;
+  text-transform: uppercase;
+}
+
+.footer-copyright {
+  margin-top: 30px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-top: 40px !important;
+}
+
+/* Login oldal fő stílusai */
+.login-form-container {
+  font-family: var(--font-body);
+  max-width: 400px;
+  margin: 20% auto;
+  padding: 32px;
+  background-color: var(--color-bg-surface-white);
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.login-title {
+  font-family: var(--font-family-heading);
+  font-size: 32px;
+  font-weight: var(--font-weight-heading);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.login-form-container .form-control:focus {
+  border-color: var(--color-accent-gold);
+  box-shadow: none;
+  outline: none;
+}
+
+.submit-login {
+  width: 100%;
+  border: none;
+  padding: 8px 16px;
+  margin: 12px 0;
+  cursor: pointer;
+  border: 1px solid var(--color-accent-gold-bg);
+}
+
+.submit-login:hover {
+  color: #3b331b;
+  background-color: var(--color-accent-gold-bg);
+}
+
+/* Regisztrációs oldal fő stílusai */
+.register-form-container {
+  font-family: var(--font-body);
+  max-width: 600px;
+  margin: 10% auto;
+  padding: 32px;
+  background-color: var(--color-bg-surface-white);
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.register-form-container .form-control:focus {
+  border-color: var(--color-accent-gold);
+  box-shadow: none;
+  outline: none;
+}
+
+.register-title {
+  font-family: var(--font-family-heading);
+  font-size: 32px;
+  font-weight: var(--font-weight-heading);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* Recepcíós oldal fő stílusai */
 body {
   margin: 0 auto;
-  font-family: var(--font-family-body);
+  font-family: var(--font-body);
   background-color: var(--color-bg-main);
   color: var(--color-text-primary);
 }
 
 .reception-header {
   padding: 24px 0 16px;
+  background-color: var(--color-bg-surface-white);
+  border-bottom: 1px solid #e0e0e0;
 }
 
 .reception-header-inner {
@@ -24,6 +216,12 @@ body {
   font-weight: 600;
 }
 
+.reception-topline-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .reception-header-row {
   display: flex;
   align-items: flex-end;
@@ -38,6 +236,19 @@ body {
   line-height: var(--line-height-heading);
   font-weight: var(--font-weight-heading);
   color: var(--color-text-primary);
+}
+
+.button-logout {
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  border: 1px solid var(--color-accent-gold-bg);
+}
+
+.button-logout:hover {
+  color: #3b331b;
+  background-color: var(--color-accent-gold-bg);
 }
 
 .reception-shift {
@@ -148,16 +359,16 @@ body {
 }
 
 .arrival-button {
-  background-color: var(--color-accent-gold-bg);
-  color: #3b331b;
   border: none;
   padding: 8px 16px;
   border-radius: 20px;
   cursor: pointer;
+  border: 1px solid var(--color-accent-gold-bg);
 }
 
 .arrival-button:hover {
-  background-color: var(--color-accent-gold-bg-hover);
+  color: #3b331b;
+  background-color: var(--color-accent-gold-bg);
 }
 
 .departure-panel {
@@ -272,7 +483,7 @@ body {
   font-size: 16px;
   color: var(--color-text-muted);
 }
-/* Reception modal styles */
+/* Recepciós ablak stílusai */
 .reception-modal {
   width: min(34rem, calc(100vw - 2rem));
   max-width: none;
