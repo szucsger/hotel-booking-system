@@ -1,3 +1,51 @@
+<?php
+session_start();
+
+require_once __DIR__ . '/../../../src/config/pdo.php';
+require_once __DIR__ . '/../../../src/services/authservice.php';
+
+// Bejelentkezett felhasználó lekérése
+$user = AuthService::getAuthenticatedUser();
+
+// Ha nincs bejelentkezve, visszairányítjuk
+if ($user === null || $user['role'] !== 'user') {
+    header('Location: /hotel-booking-system/public/pages/auth/login.php');
+    exit;
+}
+
+// Adatbázis-kapcsolat
+$pdo = getDatabaseConnection();
+
+// Vendég azonosítója
+$userId = (int) $user['id'];
+
+// Következő foglalás lekérdezése
+$sql = "
+    SELECT
+        b.check_in_date,
+        b.check_out_date,
+        b.total_price,
+        r.room_number
+    FROM bookings b
+    INNER JOIN rooms r ON b.room_id = r.id
+    WHERE b.user_id = :user_id
+      AND b.check_in_date >= CURDATE()
+      AND b.status IN ('pending', 'confirmed')
+    ORDER BY b.check_in_date ASC
+    LIMIT 1
+";
+
+$stmt = $pdo->prepare($sql);
+
+$stmt->execute([
+    'user_id' => $userId
+]);
+
+$next_booking = $stmt->fetch(PDO::FETCH_ASSOC);
+
+
+?>
+
 <!DOCTYPE html>
 <html lang="hu">
 
@@ -19,7 +67,10 @@
                 </div>
                 <div class="reception-header-row">
                     <div class="reception-title-group">
-                        <h3 class="mb-0"><span id="time-of-day">Jó reggelt </span></h3>
+                        <h3 class="mb-0">
+                            <span id="time-of-day">Jó reggelt </span>
+                            <?= htmlspecialchars($user['name'], ENT_QUOTES, 'UTF-8'); ?>!
+                        </h3>
                     </div>
                 </div>
             </div>
@@ -33,15 +84,17 @@
 <div class="row g-4">
 
     <!-- 1. Profilom -->
-    <div class="col-12 col-md-6">
-        <div class="info-card h-100">
-            <i class="bi bi-person-circle fs-1"></i>
-            <p class="info-card-label">Profilom</p>
-            <p class="info-card-description">
-                Személyes adataim megtekintése és módosítása.
-            </p>
-        </div>
-    </div>
+<div class="col-12 col-md-6">
+    <a href="profile.php" class="info-card h-100 d-block text-decoration-none">
+        <i class="bi bi-person-circle fs-1"></i>
+
+        <p class="info-card-label">Profilom</p>
+
+        <p class="info-card-description">
+            Személyes adataim megtekintése és módosítása.
+        </p>
+    </a>
+</div>
 
     <!-- 2. Foglalásaim -->
     <div class="col-12 col-md-6">
