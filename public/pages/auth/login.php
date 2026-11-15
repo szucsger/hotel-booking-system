@@ -15,7 +15,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Hibás email vagy jelszó.';
     } else {
         try {
-            $pdo = getDatabaseConnection();
+            $pdo = getDatabaseConnection();
+
             $user = AuthService::authenticate(
                 $pdo,
                 $email,
@@ -29,13 +30,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user'] = $user;
 
                 $redirects = [
-                    'admin' => '/hotel-booking-system/public/pages/staff/admin.php',
-                    'receptionist' => '/hotel-booking-system/public/pages/staff/reception.php',
-                    'user' => '/hotel-booking-system/public/pages/guest/dashboard.php',
+                    'admin' => '/hotel-booking-system-main/public/pages/staff/admin.php',
+                    'receptionist' => '/hotel-booking-system-main/public/pages/staff/reception.php',
+                    'user' => '/hotel-booking-system-main/public/pages/guest/guest.php',
                 ];
 
                 $redirectUrl = $redirects[$user['role']]
-                    ?? '/hotel-booking-system/public/index.php';
+                    ?? '/hotel-booking-system-main/public/index.php';
 
                 header('Location: ' . $redirectUrl);
                 exit;
@@ -67,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="container">
             <div class="login-form-container">
                 <h1 class="login-title">Bejelentkezés</h1>
-                <form action="/hotel-booking-system/public/pages/auth/login.php" method="POST">
+                <form action="/hotel-booking-system-main/public/pages/auth/login.php" method="POST">
                     <?php if ($success !== null): ?>
                         <div class="alert alert-success mt-3">
                             <?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?>
