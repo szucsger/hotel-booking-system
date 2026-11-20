@@ -54,10 +54,10 @@ $apiUrl = rtrim(dirname(dirname(dirname($_SERVER['SCRIPT_NAME']))), '/') . '/api
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Recepció</title>
-    <link rel="stylesheet" href="../../assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../../css/main.css">
-    <link rel="stylesheet" href="../../css/components.css">
-    <link rel="stylesheet" href="../../css/variables.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/css/main.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/css/components.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/css/variables.css">
 </head>
 
 <body>
@@ -378,8 +378,8 @@ $apiUrl = rtrim(dirname(dirname(dirname($_SERVER['SCRIPT_NAME']))), '/') . '/api
         </dialog>
     </main>
     <?php require __DIR__ . '/../../../src/includes/footer.php'; ?>
-    <script src="../../assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="../../js/staff/reception.js"></script>
+    <script src="/hotel-booking-system/public/assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="/hotel-booking-system/public/js/staff/reception.js"></script>
     <?php if ($roomStatusMessage !== ''): ?>
     <script>
         document.querySelector("#modify-room-status-modal").showModal();

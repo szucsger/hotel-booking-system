@@ -11,12 +11,12 @@ unset($_SESSION['success']);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
+    $pdo = getDatabaseConnection();
+
     if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
         $error = 'Hibás email vagy jelszó.';
     } else {
         try {
-            $pdo = getDatabaseConnection();
-
             $user = AuthService::authenticate(
                 $pdo,
                 $email,
@@ -30,13 +30,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user'] = $user;
 
                 $redirects = [
-                    'admin' => '/hotel-booking-system-main/public/pages/staff/admin.php',
-                    'receptionist' => '/hotel-booking-system-main/public/pages/staff/reception.php',
-                    'user' => '/hotel-booking-system-main/public/pages/guest/guest.php',
+                    'admin' => '/hotel-booking-system/public/pages/staff/admin.php',
+                    'receptionist' => '/hotel-booking-system/public/pages/staff/reception.php',
+                    'user' => '/hotel-booking-system/public/pages/guest/dashboard.php',
                 ];
 
                 $redirectUrl = $redirects[$user['role']]
-                    ?? '/hotel-booking-system-main/public/index.php';
+                    ?? '/hotel-booking-system/public/index.php';
 
                 header('Location: ' . $redirectUrl);
                 exit;
@@ -56,10 +56,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="stylesheet" href="../../assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../../css/main.css">
-    <link rel="stylesheet" href="../../css/components.css">
-    <link rel="stylesheet" href="../../css/variables.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/css/main.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/css/components.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/css/variables.css">
 </head>
 
 <body>
@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="container">
             <div class="login-form-container">
                 <h1 class="login-title">Bejelentkezés</h1>
-                <form action="/hotel-booking-system-main/public/pages/auth/login.php" method="POST">
+                <form action="/hotel-booking-system/public/pages/auth/login.php" method="POST">
                     <?php if ($success !== null): ?>
                         <div class="alert alert-success mt-3">
                             <?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?>
@@ -91,7 +91,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <?php require __DIR__ . '/../../../src/includes/footer.php'; ?>
     </main>
-        <script src="../../assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+        <script src="/hotel-booking-system/public/assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
