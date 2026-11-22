@@ -368,6 +368,31 @@ final class ReceptionService
                 SELECT room_id
                 FROM bookings
                 WHERE id = :id
+            ");
+            $stmt->execute(['id' => $bookingId]);
+            $roomId = $stmt->fetchColumn();
+
+            if ($roomId === false) {
+                throw new DomainException($failureMessage, 409);
+            }
+
+            $stmt = $pdo->prepare("
+                SELECT id, status
+                FROM rooms
+                WHERE id = :room_id
+                FOR UPDATE
+            ");
+            $stmt->execute(['room_id' => $roomId]);
+            $room = $stmt->fetch();
+
+            if (!$room) {
+                throw new DomainException($failureMessage, 409);
+            }
+
+            $stmt = $pdo->prepare("
+                SELECT room_id
+                FROM bookings
+                WHERE id = :id
                   AND status = :status
                   AND $dateCondition
                 FOR UPDATE
@@ -380,6 +405,34 @@ final class ReceptionService
 
             if (!$booking) {
                 throw new DomainException($failureMessage, 409);
+            }
+
+            if ((int) $booking['room_id'] !== (int) $roomId) {
+                throw new DomainException($failureMessage, 409);
+            }
+
+            if ($isCheckIn) {
+                if ($room['status'] !== 'free') {
+                    throw new DomainException('A szoba még nem áll készen a vendégfogadásra.', 409);
+                }
+
+                $stmt = $pdo->prepare("
+                    SELECT COUNT(*)
+                    FROM bookings
+                    WHERE room_id = :room_id
+                      AND status = 'checked_in'
+                      AND id != :booking_id
+                ");
+                $stmt->execute([
+                    'room_id' => $roomId,
+                    'booking_id' => $bookingId,
+                ]);
+
+                if ((int) $stmt->fetchColumn() > 0) {
+                    throw new DomainException('A szobában már van bejelentkezett vendég.', 409);
+                }
+            } elseif ($room['status'] !== 'occupied') {
+                throw new DomainException('A szoba nincs elfoglalt állapotban.', 409);
             }
 
             $stmt = $pdo->prepare("
