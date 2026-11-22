@@ -1,0 +1,851 @@
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background-color: var(--color-bg-default);
+  color: var(--color-text-primary);
+}
+/* Header részben használt stílusok */
+.header-content {
+  background-color: var(--color-bg-surface-white);
+  border-bottom: 1px solid #e0e0e0;
+}
+.site-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.site-brand-link {
+  text-decoration: none;
+}
+
+.site-logo {
+  width: 50px;
+  height: auto;
+  border-radius: 50%;
+  flex: 0 0 50px;
+  border: 1px solid var(--color-accent-gold-bg);
+}
+
+.site-title {
+  margin: 0;
+  font-size: clamp(16px, 2vw, 24px);
+  color: var(--color-text-primary);
+  font-weight: 600;
+  white-space: nowrap;
+  font-style: italic;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  height: 100%;
+}
+
+.nav-item a {
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+  transition:
+    color 0.3s ease,
+    transform 0.3s ease;
+}
+
+.nav-item a::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -5px;
+  width: 100%;
+  height: 2px;
+  background-color: var(--color-text-primary);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.nav-item a:hover {
+  color: var(--color-text-primary);
+  transform: translateY(-4px);
+}
+
+.nav-item a:hover::after {
+  transform: scaleX(1);
+}
+
+.header-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.header-form {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.nav-button {
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  border: 1px solid var(--color-accent-gold-bg);
+}
+
+.nav-button:hover {
+  color: #3b331b;
+  background-color: var(--color-accent-gold-bg);
+}
+/* Footer részben használt stílusok */
+.site-footer {
+  background-color: var(--color-bg-surface-white);
+  padding: 32px 0;
+  border-top: 1px solid #e0e0e0;
+}
+.site-footer .footer-content {
+  text-align: center;
+}
+.site-footer .footer-content p {
+  margin: 4px 0;
+  color: var(--color-text-muted);
+}
+.footer-brand-name {
+  font-weight: 600;
+  font-size: 18px;
+  text-transform: uppercase;
+}
+
+.footer-copyright {
+  margin-top: 30px;
+  font-size: 14px;
+  color: var(--color-text-muted);
+  margin-top: 40px !important;
+}
+/* Booking oldal fő stílusai */
+.booking-header-container {
+  background-image: url("../../public/assets/images/booking-header-background.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 500px;
+}
+
+.booking-header {
+  padding: 24px 0;
+  text-align: start;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+}
+.booking-title {
+  font-size: 45px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--color-text-gold);
+  font-family: var(--font-heading);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+.booking-subtitle {
+  font-size: 24px;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.booking-form {
+  background-color: var(--color-bg-surface-white);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  height: 100px;
+  border-radius: 25px;
+  position: relative;
+  transform: translateY(-50%);
+}
+
+.booking-check-in,
+.booking-check-out,
+.booking-select {
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.booking-check-in-label,
+.booking-check-out-label,
+.booking-guests-label {
+  font-weight: 600;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  display: block;
+  text-align: center;
+}
+
+.booking-check-in-input,
+.booking-check-out-input,
+.booking-guests-select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  text-align: center;
+  cursor: pointer;
+  outline: none;
+  box-shadow: none;
+}
+
+.booking-check-in-input,
+.booking-check-out-input,
+.booking-guests-select {
+  background-color: transparent;
+}
+
+.booking-check-in:hover,
+.booking-check-out:hover,
+.booking-select:hover,
+.booking-submit:hover,
+.booking-check-in:focus-within,
+.booking-check-out:focus-within,
+.booking-select:focus-within,
+.booking-submit:focus-within {
+  background-color: var(--color-bg-surface-tan);
+}
+
+.booking-submit {
+  padding: 0;
+}
+
+.booking-submit:hover {
+  border-top-right-radius: 25px;
+  border-bottom-right-radius: 25px;
+}
+
+.booking-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-style: italic;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+}
+
+.booking-check-in:hover,
+.booking-check-in:focus-within {
+  border-top-left-radius: 25px;
+  border-bottom-left-radius: 25px;
+}
+
+.booking-check-out-input:hover-within,
+.booking-check-in-input:hover-within,
+.booking-guests-select:hover-within {
+  background-color: var(--color-bg-surface-tan);
+}
+
+.booking-check-in-input:focus,
+.booking-check-out-input:focus,
+.booking-guests-select:focus {
+  outline: none;
+  box-shadow: none;
+  background-color: var(--color-bg-surface-tan);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.room-booking-btn {
+  width: 100%;
+  border: none;
+  padding: 8px 16px;
+  margin: 12px 0;
+  cursor: pointer;
+  border: 1px solid var(--color-accent-gold-bg);
+}
+
+.room-booking-btn:hover {
+  color: #3b331b;
+  background-color: var(--color-accent-gold-bg);
+}
+
+.room-card {
+  background-color: var(--color-bg-surface-white);
+  border: 0;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.room-card .room-details-button {
+  border: 0;
+  border-radius: inherit;
+  color: inherit;
+}
+
+.room-results.has-results {
+  margin-bottom: 48px;
+}
+
+.information-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  background-color: var(--color-bg-surface-tan);
+  gap: 16px;
+}
+
+.information-card-highlight {
+  background-color: var(--color-bg-surface-white);
+  padding: 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.information-card-highlight h2 {
+  font-style: italic;
+  letter-spacing: 3px;
+}
+
+.highlight {
+  color: var(--color-accent-gold);
+}
+
+.information-card-highlight p {
+  margin: 10px 10px 10px 0;
+  color: var(--color-text-muted);
+}
+
+.information-card-highlight a {
+  color: var(--color-accent-gold);
+  text-decoration: none;
+}
+.information-card-highlight a:hover {
+  text-decoration: underline;
+}
+
+.information-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 16px;
+  margin: 0;
+}
+
+.information-cards > .col-12 {
+  width: auto;
+  max-width: none;
+  padding: 0;
+}
+
+.information-card {
+  background-color: var(--color-bg-surface-white);
+  padding: 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  margin-bottom: 16px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.information-card h4 {
+  font-style: italic;
+}
+
+.information-card p {
+  margin: 10px 10px 10px 0;
+  color: var(--color-text-muted);
+}
+
+.information-card,
+.information-card-highlight {
+  height: 100%;
+}
+
+@media (max-width: 767.98px) {
+  .information-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Login oldal fő stílusai */
+.login-form-container {
+  font-family: var(--font-body);
+  max-width: 400px;
+  margin: 20% auto;
+  padding: 32px;
+  background-color: var(--color-bg-surface-white);
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.login-title {
+  font-family: var(--font-family-heading);
+  font-size: 32px;
+  font-weight: var(--font-weight-heading);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.login-form-container .form-control:focus {
+  border-color: var(--color-accent-gold);
+  box-shadow: none;
+  outline: none;
+}
+
+.submit-login {
+  width: 100%;
+  border: none;
+  padding: 8px 16px;
+  margin: 12px 0;
+  cursor: pointer;
+  border: 1px solid var(--color-accent-gold-bg);
+}
+
+.submit-login:hover {
+  color: #3b331b;
+  background-color: var(--color-accent-gold-bg);
+}
+
+/* Regisztrációs oldal fő stílusai */
+.register-form-container {
+  font-family: var(--font-body);
+  max-width: 600px;
+  margin: 10% auto;
+  padding: 32px;
+  background-color: var(--color-bg-surface-white);
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.register-form-container .form-control:focus {
+  border-color: var(--color-accent-gold);
+  box-shadow: none;
+  outline: none;
+}
+
+.register-title {
+  font-family: var(--font-family-heading);
+  font-size: 32px;
+  font-weight: var(--font-weight-heading);
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+/* Recepcíós oldal fő stílusai */
+body {
+  margin: 0 auto;
+  font-family: var(--font-body);
+  background-color: var(--color-bg-main);
+  color: var(--color-text-primary);
+}
+
+.reception-header {
+  padding: 24px 0 16px;
+  background-color: var(--color-bg-surface-white);
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.reception-header-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.reception-topline {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.reception-topline-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.reception-header-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.reception-title-group h3 {
+  margin: 0;
+  font-family: var(--font-family-heading);
+  font-size: 24px;
+  line-height: var(--line-height-heading);
+  font-weight: var(--font-weight-heading);
+  color: var(--color-text-primary);
+}
+
+.button-logout {
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  border: 1px solid var(--color-accent-gold-bg);
+}
+
+.button-logout:hover {
+  color: #3b331b;
+  background-color: var(--color-accent-gold-bg);
+}
+
+.reception-shift {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.reception-body {
+  background-color: var(--color-bg-main);
+}
+
+.info-card {
+  background-color: var(--color-bg-surface-white);
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+}
+
+.info-card-label {
+  margin: 20px 0;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.info-card h2 {
+  margin: 0;
+  font-size: 40px;
+  font-weight: 600;
+}
+
+.info-card-description {
+  margin: 10px 0;
+  font-size: 18px;
+  color: var(--color-text-muted);
+}
+
+.arrival-panel {
+  background-color: var(--color-bg-surface-white);
+  padding: 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin: 50px 0;
+  height: 500px;
+  overflow-y: auto;
+}
+
+.arrival-card {
+  background-color: var(--color-bg-surface-white);
+  padding: 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin: 10px 0;
+}
+
+.arrival-title,
+.departure-title,
+.operation-title {
+  font-weight: 600;
+  margin-bottom: 16px;
+  margin-top: 20px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d8d1c7;
+  border-radius: 20px;
+  font-size: 14px;
+  margin-bottom: 16px;
+  margin-top: 20px;
+}
+
+.search-input:focus {
+  border-color: var(--color-accent-gold);
+  box-shadow: 0 0 0 0.2rem rgba(206, 164, 116, 0.25);
+}
+
+.arrival-image {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  color: #8a5a2b;
+}
+
+.arrival-image .user-icon {
+  width: 50px;
+  height: 50px;
+  display: block;
+  color: currentColor;
+}
+
+.arrival-text {
+  margin: 4px 0;
+  font-size: 14px;
+  color: var(--color-text-muted);
+}
+
+.arrival-action {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.arrival-button {
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  border: 1px solid var(--color-accent-gold-bg);
+}
+
+.arrival-button:hover {
+  color: #3b331b;
+  background-color: var(--color-accent-gold-bg);
+}
+
+.departure-panel {
+  background-color: var(--color-accent-gold-bg);
+  padding: 16px;
+  gap: 12px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin: 50px 0;
+  height: 500px;
+  overflow-y: auto;
+}
+
+.departure-card {
+  background-color: var(--color-bg-surface-sand);
+  padding: 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin: 10px 0;
+}
+
+.departure-room-number {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.departure-time {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  font-size: 18px;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.departure-guest-name {
+  font-size: 16px;
+  color: #3b331b;
+  margin: 8px 0;
+}
+
+.departure-button {
+  color: #3b331b;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  display: flex;
+  justify-content: flex-start;
+  width: 33%;
+}
+
+.departure-button:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.departure-button {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+  margin: 8px 0;
+  width: 60%;
+}
+
+.operation-panel {
+  background-color: var(--color-bg-surface-white);
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+}
+
+.operation-subtitle {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 20px 0 0 0;
+}
+
+.operation-card {
+  background-color: var(--color-bg-surface-white);
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  margin: 10px 0;
+}
+
+.operation-button {
+  border: none;
+  border-radius: 20px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  width: 100%;
+}
+
+.operation-button:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.operation-button-title {
+  font-size: 16px;
+  font-weight: bold;
+  margin: 0;
+  padding: 8px 0 0 0;
+}
+
+.operation-button-description {
+  font-size: 16px;
+  color: var(--color-text-muted);
+}
+/* Recepciós ablak stílusai */
+.reception-modal {
+  width: min(34rem, calc(100vw - 2rem));
+  max-width: none;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+  margin: auto;
+  padding: 24px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  background-color: var(--color-bg-surface-white);
+  color: var(--color-text-primary);
+  box-shadow: 0 16px 48px rgba(37, 36, 31, 0.22);
+}
+
+.reception-modal::backdrop {
+  background-color: rgba(37, 36, 31, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.reception-modal-title {
+  margin: 0 0 20px;
+  color: var(--color-text-primary);
+  font-family: var(--font-family-heading);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.reception-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.reception-modal-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.reception-modal-field label {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.reception-modal-field input,
+.reception-modal-field select {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-input-border);
+  border-radius: 6px;
+  background-color: var(--color-input-bg);
+  color: var(--color-text-primary);
+  font: inherit;
+}
+
+.reception-modal-field input:focus,
+.reception-modal-field select:focus {
+  border-color: var(--color-accent-gold);
+  outline: 3px solid rgba(206, 164, 116, 0.25);
+}
+
+.reception-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.reception-modal-actions .btn {
+  min-height: 44px;
+  padding: 10px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.reception-modal-submit {
+  border: 1px solid var(--color-btn-dark-bg);
+  background-color: var(--color-btn-dark-bg);
+  color: var(--color-btn-dark-text);
+}
+
+.reception-modal-submit:hover {
+  border-color: var(--color-dark-hover);
+  background-color: var(--color-dark-hover);
+  color: var(--color-text-white);
+}
+
+.reception-modal-cancel {
+  border: 1px solid var(--color-btn-outline-border);
+  background-color: var(--color-bg-surface-white);
+  color: var(--color-text-primary);
+}
+
+.reception-modal-cancel:hover {
+  border-color: var(--color-text-muted);
+  background-color: var(--color-bg-main);
+  color: var(--color-text-primary);
+}
+
+@media (max-width: 480px) {
+  .reception-modal {
+    padding: 20px;
+  }
+
+  .reception-modal-actions {
+    flex-direction: column;
+  }
+}

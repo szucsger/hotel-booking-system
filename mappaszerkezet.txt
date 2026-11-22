@@ -4,7 +4,7 @@ lumen-hotel/
 │   ├── index.php                   # Főoldal (Hero szekció, gyorskereső sáv, kiemelt ajánlatok)
 │   │
 │   ├── css/                        # Stíluslapok
-│   │   ├── variables.css           # CSS változók (Lumen színpaletta, status színkódok)
+│   │   ├── variables.css           # CSS változók (színpaletta, status színkódok)
 │   │   ├── main.css                # Globális elrendezés és Serif tipográfia
 │   │   ├── components.css          # Újrahasznosítható elemek (gombok, kártyák, status badge-ek)
 │   │   └── portal.css              # Admin és Vendég portál oldalsávok (sidebar) és dashboard elrendezések
