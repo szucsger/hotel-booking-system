@@ -8,13 +8,25 @@ $error = null;
 $success = $_SESSION['success'] ?? null;
 unset($_SESSION['success']);
 
+if (!isset($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $submittedCsrfToken = $_POST['csrf_token'] ?? null;
+    if (
+        !is_string($submittedCsrfToken)
+        || !hash_equals($_SESSION['csrf_token'], $submittedCsrfToken)
+    ) {
+        $error = 'Érvénytelen vagy lejárt munkamenet. Frissítsd az oldalt, és próbáld újra.';
+    }
+
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
 
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
+    if ($error === null && (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '')) {
         $error = 'Hibás email vagy jelszó.';
-    } else {
+    } elseif ($error === null) {
         try {
             $pdo = getDatabaseConnection();
             $user = AuthService::authenticate(
@@ -69,6 +81,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="login-form-container">
                 <h1 class="login-title">Bejelentkezés</h1>
                 <form action="/hotel-booking-system/public/pages/auth/login.php" method="POST">
+                    <input type="hidden" name="csrf_token"
+                        value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
                     <?php if ($success !== null): ?>
                         <div class="alert alert-success mt-3">
                             <?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?>
