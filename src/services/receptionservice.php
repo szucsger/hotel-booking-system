@@ -352,7 +352,9 @@ final class ReceptionService
         $isCheckIn = $action === 'check_in';
         $expectedStatus = $isCheckIn ? 'confirmed' : 'checked_in';
         // A feltétel kizárólag a fenti két rögzített érték egyike lehet, nem kérésből érkezik.
-        $dateCondition = $isCheckIn ? 'check_in_date <= CURDATE()' : 'check_out_date <= CURDATE()';
+        $dateCondition = $isCheckIn
+            ? 'check_in_date <= CURDATE() AND check_out_date > CURDATE()'
+            : 'check_out_date <= CURDATE()';
         $newBookingStatus = $isCheckIn ? 'checked_in' : 'checked_out';
         $newRoomStatus = $isCheckIn ? 'occupied' : 'cleaning';
         $failureMessage = $isCheckIn
