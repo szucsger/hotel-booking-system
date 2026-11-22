@@ -59,7 +59,7 @@ final class ReceptionService
             JOIN users ON users.id = bookings.user_id
             JOIN rooms ON rooms.id = bookings.room_id
             JOIN room_types ON room_types.id = rooms.room_type_id
-            WHERE bookings.check_out_date = :check_out_date
+            WHERE bookings.check_out_date <= :check_out_date
               AND bookings.status IN ('confirmed', 'checked_in')
             ORDER BY rooms.room_number
         ");
