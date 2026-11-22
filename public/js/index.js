@@ -43,6 +43,7 @@ document.querySelectorAll(".room-details-button").forEach((button) => {
       button.getAttribute("data-check-out");
     document.querySelector("#booking-guest-count").value =
       button.getAttribute("data-guest-count");
+    bookingMessage.textContent = "";
     roomDetailsDialog.showModal();
   });
 });
