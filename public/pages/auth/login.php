@@ -30,9 +30,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['user'] = $user;
 
                 $redirects = [
-                    'admin' => '/hotel-booking-system/public/pages/staff/admin.php',
+                    'admin' => '/hotel-booking-system/public/pages/staff/reception.php',
                     'receptionist' => '/hotel-booking-system/public/pages/staff/reception.php',
-                    'user' => '/hotel-booking-system/public/pages/guest/dashboard.php',
+                    'user' => '/hotel-booking-system/public/index.php',
                 ];
 
                 $redirectUrl = $redirects[$user['role']]
