@@ -75,7 +75,6 @@ $next_booking = $stmt->fetch(PDO::FETCH_ASSOC);
                 </div>
             </div>
         </div>
-        </div>
     </header>
 
 <main class="container my-4 reception-body">
@@ -109,16 +108,21 @@ $next_booking = $stmt->fetch(PDO::FETCH_ASSOC);
     </a>
 </div>
 
-    <!-- 3. Új foglalás -->
-    <div class="col-12 col-md-6">
-        <div class="info-card h-100">
-            <i class="bi bi-plus-circle fs-1"></i>
-            <p class="info-card-label">Új foglalás</p>
-            <p class="info-card-description">
-                Új szoba lefoglalása a szállodában.
-            </p>
-        </div>
-    </div>
+<!-- 3. Új foglalás -->
+<div class="col-12 col-md-6">
+        <a href="../../index.php"
+        class="info-card h-100 d-block text-decoration-none">
+
+        <i class="bi bi-plus-circle fs-1"></i>
+
+        <p class="info-card-label">Új foglalás</p>
+
+        <p class="info-card-description">
+            Új szoba lefoglalása a szállodában.
+        </p>
+
+    </a>
+</div>
 
 <!-- 4. Kijelentkezés -->
 <div class="col-12 col-md-6">

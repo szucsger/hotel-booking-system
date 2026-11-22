@@ -9,7 +9,7 @@ require_once __DIR__ . '/../../../src/services/authservice.php';
 $user = AuthService::getAuthenticatedUser();
 
 if ($user === null || $user['role'] !== 'user') {
-    header('Location: /hotel-booking-system-main/public/pages/auth/login.php');
+    header('Location: /hotel-booking-system/public/pages/auth/login.php');
     exit;
 }
 
@@ -120,14 +120,13 @@ $statusLabels = [
 
                     </div>
 
-                    <strong>Állapot:</strong>
+                        <strong>Állapot:</strong>
                         <?= htmlspecialchars(
                             $statusLabels[$booking['status']] ?? $booking['status'],
                             ENT_QUOTES,
                             'UTF-8'
                         ) ?>
-
-                </div>
+                    </div>
 
             <?php endforeach; ?>
 
@@ -184,8 +183,12 @@ $statusLabels = [
 
                     </div>
 
-                    <strong>Állapot:</strong>
-                    <?= htmlspecialchars($booking['status']) ?>
+                        <strong>Állapot:</strong>
+                        <?= htmlspecialchars(
+                            $statusLabels[$booking['status']] ?? $booking['status'],
+                            ENT_QUOTES,
+                            'UTF-8'
+                        ) ?>
 
                 </div>
 
