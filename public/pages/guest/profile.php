@@ -9,7 +9,7 @@ require_once __DIR__ . '/../../../src/services/authservice.php';
 $user = AuthService::getAuthenticatedUser();
 
 if ($user === null || $user['role'] !== 'user') {
-    header('Location: /hotel-booking-system-main/public/pages/auth/login.php');
+    header('Location: /hotel-booking-system/public/pages/auth/login.php');
     exit;
 }
 
