@@ -170,6 +170,19 @@ body {
   transform: translateY(-50%);
 }
 
+@media (max-width: 767.98px) {
+  .booking-form {
+    height: auto;
+    transform: none;
+    margin-top: -50px;
+    margin-bottom: 24px;
+  }
+
+  .booking-btn {
+    min-height: 64px;
+  }
+}
+
 .booking-check-in,
 .booking-check-out,
 .booking-select {
