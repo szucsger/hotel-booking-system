@@ -68,7 +68,7 @@ $next_booking = $stmt->fetch(PDO::FETCH_ASSOC);
                 <div class="reception-header-row">
                     <div class="reception-title-group">
                         <h3 class="mb-0">
-                            <span id="time-of-day">Jó reggelt </span>
+                            <span id="time-of-day"></span>
                             <?= htmlspecialchars($user['name'], ENT_QUOTES, 'UTF-8'); ?>!
                         </h3>
                     </div>
@@ -96,16 +96,18 @@ $next_booking = $stmt->fetch(PDO::FETCH_ASSOC);
     </a>
 </div>
 
-    <!-- 2. Foglalásaim -->
-    <div class="col-12 col-md-6">
-        <div class="info-card h-100">
-            <i class="bi bi-calendar-check fs-1"></i>
-            <p class="info-card-label">Foglalásaim</p>
-            <p class="info-card-description">
-                Korábbi és aktuális foglalásaim megtekintése.
-            </p>
-        </div>
-    </div>
+<!-- 2. Foglalásaim -->
+<div class="col-12 col-md-6">
+    <a href="bookings.php" class="info-card h-100 d-block text-decoration-none">
+        <i class="bi bi-calendar-check fs-1"></i>
+
+        <p class="info-card-label">Foglalásaim</p>
+
+        <p class="info-card-description">
+            Korábbi és aktuális foglalásaim megtekintése.
+        </p>
+    </a>
+</div>
 
     <!-- 3. Új foglalás -->
     <div class="col-12 col-md-6">
@@ -118,16 +120,18 @@ $next_booking = $stmt->fetch(PDO::FETCH_ASSOC);
         </div>
     </div>
 
-    <!-- 4. Kijelentkezés -->
-    <div class="col-12 col-md-6">
-        <div class="info-card h-100">
-            <i class="bi bi-box-arrow-right fs-1"></i>
-            <p class="info-card-label">Kijelentkezés</p>
-            <p class="info-card-description">
-                Kilépés a vendégfiókból.
-            </p>
-        </div>
-    </div>
+<!-- 4. Kijelentkezés -->
+<div class="col-12 col-md-6">
+    <a href="logout.php" class="info-card h-100 d-block text-decoration-none">
+        <i class="bi bi-box-arrow-right fs-1"></i>
+
+        <p class="info-card-label">Kijelentkezés</p>
+
+        <p class="info-card-description">
+            Kilépés a vendégfiókból.
+        </p>
+    </a>
+</div>
 
 </div>
 <!-- Következő foglalásom -->
@@ -187,3 +191,26 @@ $next_booking = $stmt->fetch(PDO::FETCH_ASSOC);
 
     </div>
 </div>
+<script>
+    function updateGreeting() {
+        const hour = new Date().getHours();
+        let greeting;
+
+        if (hour >= 5 && hour < 10) {
+            greeting = "Jó reggelt";
+        } else if (hour >= 10 && hour < 18) {
+            greeting = "Jó napot";
+        } else if (hour >= 18 && hour < 22) {
+            greeting = "Jó estét";
+        } else {
+            greeting = "Jó éjszakát";
+        }
+
+        document.getElementById("time-of-day").textContent = greeting + " ";
+    }
+
+    updateGreeting();
+</script>
+
+</body>
+</html>

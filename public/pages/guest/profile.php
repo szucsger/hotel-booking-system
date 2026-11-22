@@ -15,8 +15,56 @@ if ($user === null || $user['role'] !== 'user') {
 
 // Adatbázis-kapcsolat
 $pdo = getDatabaseConnection();
+
+// Jelszó módosítása
+if (isset($_POST['change_password'])) {
+
+    $currentPassword = $_POST['current_password'];
+    $newPassword = $_POST['new_password'];
+    $confirmPassword = $_POST['confirm_password'];
+
+    // Jelenlegi jelszó lekérése
+    $stmt = $pdo->prepare("
+        SELECT password_hash
+        FROM users
+        WHERE id = :id
+        AND is_deleted = 0
+    ");
+
+    $stmt->execute([
+        'id' => $user['id']
+    ]);
+
+    $passwordData = $stmt->fetch(PDO::FETCH_ASSOC);
+
+
+
+    if (!password_verify($currentPassword, $passwordData['password_hash'])) {
+        $passwordError = "A jelenlegi jelszó hibás.";
+    } elseif ($newPassword !== $confirmPassword) {
+        $passwordError = "Az új jelszavak nem egyeznek.";
+    } elseif (strlen($newPassword) < 8) {
+        $passwordError = "Az új jelszónak legalább 8 karakteresnek kell lennie.";
+    } else {
+
+        $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
+
+        $stmt = $pdo->prepare("
+            UPDATE users
+            SET password_hash = :password_hash
+            WHERE id = :id
+        ");
+
+        $stmt->execute([
+            'password_hash' => $newHash,
+            'id' => $user['id']
+        ]);
+
+        $passwordSuccess = "A jelszó sikeresen módosult.";
+    }
+}
 // Profiladatok mentése
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (isset($_POST['save_profile'])) {
 
     $sql = "
         UPDATE users
@@ -142,7 +190,8 @@ if (!$profile) {
                     Szerkesztés
                 </button>
 
-                <button type="submit" id="saveButton" class="btn btn-success d-none">
+                <button type="submit" name="save_profile" value="1"
+                    id="saveButton" class="btn btn-success d-none">
                     Mentés
                 </button>
 
@@ -152,7 +201,68 @@ if (!$profile) {
             </div>
 
         </form>
+        <!-- Jelszó módosítása -->
+<hr class="my-4">
 
+<h4 class="mb-4">Jelszó módosítása</h4>
+
+<?php if (isset($passwordError)): ?>
+    <div class="alert alert-danger">
+        <?= htmlspecialchars($passwordError) ?>
+    </div>
+<?php endif; ?>
+
+<?php if (isset($passwordSuccess)): ?>
+    <div class="alert alert-success">
+        <?= htmlspecialchars($passwordSuccess) ?>
+    </div>
+<?php endif; ?>
+
+<form method="POST" action="">
+
+    <div class="row g-3">
+
+        <div class="col-md-6">
+            <label class="form-label">Jelenlegi jelszó</label>
+            <input type="password"
+                   name="current_password"
+                   class="form-control"
+                   autocomplete="current-password"
+                   required>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Új jelszó</label>
+            <input type="password"
+                   name="new_password"
+                   class="form-control"
+                   minlength="8"
+                   autocomplete="new-password"
+                   required>
+        </div>
+
+        <div class="col-md-6">
+            <label class="form-label">Új jelszó megerősítése</label>
+            <input type="password"
+                   name="confirm_password"
+                   class="form-control"
+                   minlength="8"
+                   autocomplete="new-password"
+                   required>
+        </div>
+
+    </div>
+
+    <div class="mt-4">
+        <button type="submit"
+                name="change_password"
+                value="1"
+                class="btn btn-primary">
+            Jelszó módosítása
+        </button>
+    </div>
+
+</form>
 
     </div>
 
@@ -160,7 +270,9 @@ if (!$profile) {
 <script>
 document.getElementById('editButton').addEventListener('click', function () {
 
-    const fields = document.querySelectorAll('input');
+    const fields = document.querySelectorAll(
+    'input[name="name"], input[name="phone_number"], input[name="birth_date"], input[name="nationality"], input[name="address"]'
+);
 
     fields.forEach(function(field) {
         field.removeAttribute('readonly');
