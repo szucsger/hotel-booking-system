@@ -19,7 +19,7 @@ final class ReceptionService
             SELECT COUNT(*)
             FROM bookings
             WHERE check_out_date = CURDATE()
-              AND status = 'confirmed'
+              AND status IN ('confirmed', 'checked_in')
         ")->fetchColumn();
 
         $availableRooms = (int) $pdo->query("
