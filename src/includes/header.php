@@ -23,10 +23,17 @@
                 </div>
                 <div class="col-12 col-md-3 header-actions">
                     <div class="header-form">
-                        <a href="<?php echo $publicPath; ?>/pages/auth/login.php" class="btn login-button nav-button" id="login-button">Bejelentkezés</a>
-                        <a href="<?php echo $publicPath; ?>/pages/auth/register.php" class="btn register-button nav-button" id="register-button">Regisztráció</a>
-                        <a href="<?php echo $publicPath; ?>/pages/profile.php" class="btn profile-button nav-button profile-button" id="profile-button" hidden>Profil</a>
-                        <a href="<?php echo $publicPath; ?>/pages/auth/logout.php" class="btn profile-button nav-button profile-button" id="logout-button" hidden>Kijelentkezés</a>
+                        <?php if (isset($_SESSION['user']) && is_array($_SESSION['user'])): ?>
+                            <a href="<?php echo $publicPath; ?>/pages/profile.php" class="btn profile-button nav-button profile-button" id="profile-button">Profil</a>
+                            <form action="<?php echo $publicPath; ?>/pages/auth/logout.php" method="post">
+                                <input type="hidden" name="csrf_token"
+                                    value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
+                                <button type="submit" class="btn profile-button nav-button profile-button" id="logout-button">Kijelentkezés</button>
+                            </form>
+                        <?php else: ?>
+                            <a href="<?php echo $publicPath; ?>/pages/auth/login.php" class="btn login-button nav-button" id="login-button">Bejelentkezés</a>
+                            <a href="<?php echo $publicPath; ?>/pages/auth/register.php" class="btn register-button nav-button" id="register-button">Regisztráció</a>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>

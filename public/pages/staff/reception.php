@@ -69,6 +69,8 @@ $apiUrl = rtrim(dirname(dirname(dirname($_SERVER['SCRIPT_NAME']))), '/') . '/api
                     <div> Recepció · <span id="current-day"></span>
                     </div>
                     <form action="../../pages/auth/logout.php" method="post">
+                        <input type="hidden" name="csrf_token"
+                            value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
                         <button class="btn button-logout" id="logout-button" type="submit">Kijelentkezés</button>
                     </form>
                 </div>
