@@ -19,7 +19,7 @@ final class ReceptionService
             SELECT COUNT(*)
             FROM bookings
             WHERE check_out_date = CURDATE()
-              AND status = 'confirmed'
+              AND status IN ('confirmed', 'checked_in')
         ")->fetchColumn();
 
         $availableRooms = (int) $pdo->query("
@@ -44,7 +44,7 @@ final class ReceptionService
             JOIN users ON users.id = bookings.user_id
             JOIN rooms ON rooms.id = bookings.room_id
             JOIN room_types ON room_types.id = rooms.room_type_id
-            WHERE bookings.check_in_date >= :check_in_date
+            WHERE bookings.check_out_date > :check_in_date
               AND bookings.status = 'confirmed'
             ORDER BY bookings.check_in_date ASC, rooms.room_number ASC
         ");
@@ -59,7 +59,7 @@ final class ReceptionService
             JOIN users ON users.id = bookings.user_id
             JOIN rooms ON rooms.id = bookings.room_id
             JOIN room_types ON room_types.id = rooms.room_type_id
-            WHERE bookings.check_out_date = :check_out_date
+            WHERE bookings.check_out_date <= :check_out_date
               AND bookings.status IN ('confirmed', 'checked_in')
             ORDER BY rooms.room_number
         ");
@@ -124,7 +124,14 @@ final class ReceptionService
         $guestCount = self::positiveInteger($input, 'guest_count');
 
         $stmt = $pdo->prepare("
-            SELECT rooms.id, rooms.room_number, room_types.name AS room_type
+            SELECT
+                rooms.id,
+                rooms.room_number,
+                room_types.name AS room_type,
+                room_types.description,
+                room_types.capacity,
+                room_types.bed_type,
+                room_types.price_per_night  
             FROM rooms
             JOIN room_types ON room_types.id = rooms.room_type_id
             WHERE room_types.capacity >= :guest_count
@@ -345,7 +352,9 @@ final class ReceptionService
         $isCheckIn = $action === 'check_in';
         $expectedStatus = $isCheckIn ? 'confirmed' : 'checked_in';
         // A feltétel kizárólag a fenti két rögzített érték egyike lehet, nem kérésből érkezik.
-        $dateCondition = $isCheckIn ? 'check_in_date <= CURDATE()' : 'check_out_date <= CURDATE()';
+        $dateCondition = $isCheckIn
+            ? 'check_in_date <= CURDATE() AND check_out_date > CURDATE()'
+            : 'check_out_date <= CURDATE()';
         $newBookingStatus = $isCheckIn ? 'checked_in' : 'checked_out';
         $newRoomStatus = $isCheckIn ? 'occupied' : 'cleaning';
         $failureMessage = $isCheckIn
@@ -355,6 +364,31 @@ final class ReceptionService
         $pdo->beginTransaction();
 
         try {
+            $stmt = $pdo->prepare("
+                SELECT room_id
+                FROM bookings
+                WHERE id = :id
+            ");
+            $stmt->execute(['id' => $bookingId]);
+            $roomId = $stmt->fetchColumn();
+
+            if ($roomId === false) {
+                throw new DomainException($failureMessage, 409);
+            }
+
+            $stmt = $pdo->prepare("
+                SELECT id, status
+                FROM rooms
+                WHERE id = :room_id
+                FOR UPDATE
+            ");
+            $stmt->execute(['room_id' => $roomId]);
+            $room = $stmt->fetch();
+
+            if (!$room) {
+                throw new DomainException($failureMessage, 409);
+            }
+
             $stmt = $pdo->prepare("
                 SELECT room_id
                 FROM bookings
@@ -371,6 +405,34 @@ final class ReceptionService
 
             if (!$booking) {
                 throw new DomainException($failureMessage, 409);
+            }
+
+            if ((int) $booking['room_id'] !== (int) $roomId) {
+                throw new DomainException($failureMessage, 409);
+            }
+
+            if ($isCheckIn) {
+                if ($room['status'] !== 'free') {
+                    throw new DomainException('A szoba még nem áll készen a vendégfogadásra.', 409);
+                }
+
+                $stmt = $pdo->prepare("
+                    SELECT COUNT(*)
+                    FROM bookings
+                    WHERE room_id = :room_id
+                      AND status = 'checked_in'
+                      AND id != :booking_id
+                ");
+                $stmt->execute([
+                    'room_id' => $roomId,
+                    'booking_id' => $bookingId,
+                ]);
+
+                if ((int) $stmt->fetchColumn() > 0) {
+                    throw new DomainException('A szobában már van bejelentkezett vendég.', 409);
+                }
+            } elseif ($room['status'] !== 'occupied') {
+                throw new DomainException('A szoba nincs elfoglalt állapotban.', 409);
             }
 
             $stmt = $pdo->prepare("

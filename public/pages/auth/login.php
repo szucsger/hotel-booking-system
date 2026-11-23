@@ -8,15 +8,27 @@ $error = null;
 $success = $_SESSION['success'] ?? null;
 unset($_SESSION['success']);
 
+if (!isset($_SESSION['csrf_token']) || !is_string($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $submittedCsrfToken = $_POST['csrf_token'] ?? null;
+    if (
+        !is_string($submittedCsrfToken)
+        || !hash_equals($_SESSION['csrf_token'], $submittedCsrfToken)
+    ) {
+        $error = 'Érvénytelen vagy lejárt munkamenet. Frissítsd az oldalt, és próbáld újra.';
+    }
+
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
-    if (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '') {
+
+    if ($error === null && (!filter_var($email, FILTER_VALIDATE_EMAIL) || $password === '')) {
         $error = 'Hibás email vagy jelszó.';
-    } else {
+    } elseif ($error === null) {
         try {
             $pdo = getDatabaseConnection();
-
             $user = AuthService::authenticate(
                 $pdo,
                 $email,
@@ -29,14 +41,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 session_regenerate_id(true);
                 $_SESSION['user'] = $user;
 
-$redirects = [
-    'admin' => '/hotel-booking-system/public/pages/staff/admin.php',
-    'receptionist' => '/hotel-booking-system/public/pages/staff/reception.php',
-    'user' => '/hotel-booking-system/public/pages/guest/guest.php',
-];
+                $redirects = [
+                    'admin' => '/hotel-booking-system/public/pages/staff/reception.php',
+                    'receptionist' => '/hotel-booking-system/public/pages/staff/reception.php',
+                    'user' => '/hotel-booking-system/public/index.php',
+                ];
 
-$redirectUrl = $redirects[$user['role']]
-    ?? '/hotel-booking-system/public/index.php';
+                $redirectUrl = $redirects[$user['role']]
+                    ?? '/hotel-booking-system/public/index.php';
 
                 header('Location: ' . $redirectUrl);
                 exit;
@@ -56,10 +68,10 @@ $redirectUrl = $redirects[$user['role']]
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <link rel="stylesheet" href="../../assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../../css/main.css">
-    <link rel="stylesheet" href="../../css/components.css">
-    <link rel="stylesheet" href="../../css/variables.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/css/main.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/css/components.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/css/variables.css">
 </head>
 
 <body>
@@ -69,6 +81,8 @@ $redirectUrl = $redirects[$user['role']]
             <div class="login-form-container">
                 <h1 class="login-title">Bejelentkezés</h1>
                 <form action="/hotel-booking-system/public/pages/auth/login.php" method="POST">
+                    <input type="hidden" name="csrf_token"
+                        value="<?= htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8') ?>">
                     <?php if ($success !== null): ?>
                         <div class="alert alert-success mt-3">
                             <?= htmlspecialchars($success, ENT_QUOTES, 'UTF-8') ?>
@@ -91,7 +105,7 @@ $redirectUrl = $redirects[$user['role']]
         </div>
         <?php require __DIR__ . '/../../../src/includes/footer.php'; ?>
     </main>
-        <script src="../../assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+        <script src="/hotel-booking-system/public/assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

@@ -9,6 +9,7 @@ header('Cache-Control: no-store');
 require_once __DIR__ . '/../../src/config/pdo.php';
 require_once __DIR__ . '/../../src/services/receptionservice.php';
 require_once __DIR__ . '/../../src/services/authservice.php';
+require_once __DIR__ . '/../../src/services/bookingservice.php';
 
 // Minden válasz ugyanazt a JSON-struktúrát és HTTP-státuszkódot használja.
 function sendApiJson(int $statusCode, array $payload): void
@@ -23,14 +24,37 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     sendApiJson(405, ['success' => false, 'message' => 'Nem támogatott kérés.']);
 }
 
-// Ellenőrzi, hogy a felhasználó rendelkezik-e a megfelelő szerepkörrel az API-híváshoz.
-$user = AuthService::getAuthenticatedUser();
-if ($user === null) {
-    sendApiJson(401, ['success' => false, 'message' => 'Nincs jogosultságod az API-híváshoz.']);
+$action = $_POST['action'] ?? '';
+
+if (!is_string($action)) {
+    sendApiJson(400, ['success' => false, 'message' => 'Ismeretlen művelet.']);
 }
 
-if (!AuthService::hasRole(['admin', 'receptionist'])) {
-    sendApiJson(403, ['success' => false, 'message' => 'Nincs jogosultságod az API-híváshoz.']);
+$user = AuthService::getAuthenticatedUser();
+
+if ($user === null) {
+    sendApiJson(401, ['success' => false, 'message' => 'Jelentkezz be a művelethez.']);
+}
+
+$receptionActions = [
+    'reception.search_guest',
+    'reception.available_rooms',
+    'reception.new_booking',
+    'reception.modify_room_status',
+    'reception.check_in',
+    'reception.check_out',
+];
+
+if ($action === 'guest.create_booking') {
+    if (!AuthService::hasRole(['user'])) {
+        sendApiJson(403, ['success' => false, 'message' => 'Ehhez a művelethez nincs jogosultságod.']);
+    }
+} elseif (in_array($action, $receptionActions, true)) {
+    if (!AuthService::hasRole(['admin', 'receptionist'])) {
+        sendApiJson(403, ['success' => false, 'message' => 'Ehhez a művelethez nincs jogosultságod.']);
+    }
+} else {
+    sendApiJson(400, ['success' => false, 'message' => 'Ismeretlen művelet.']);
 }
 
 // A munkamenethez kötött token megakadályozza, hogy más weboldal a felhasználó nevében küldjön kérést.
@@ -49,7 +73,19 @@ try {
     $pdo = getDatabaseConnection();
 
     // Az action neve tartalmazza a funkcióterületet, így a későbbi API-műveletek is egyediek maradnak.
-    switch ($_POST['action'] ?? '') {
+    switch ($action) {
+        case 'guest.create_booking':
+        $bookingId = BookingService::createGuestBooking(
+            $pdo,
+            (int) $user['id'],
+            $_POST
+        );
+
+        sendApiJson(201, [
+            'success' => true,
+            'message' => 'A foglalási kérelmet elküldtük, jóváhagyásra vár.',
+            'booking_id' => $bookingId,
+        ]);
         case 'reception.search_guest':
             $result = ReceptionService::searchGuests($pdo, $_POST);
             sendApiJson(200, [
@@ -100,7 +136,7 @@ try {
     }
 } catch (DomainException $e) {
     // A szolgáltatás ismert üzleti vagy validációs hibáit kliensoldali hibaként adjuk vissza.
-    $statusCode = in_array($e->getCode(), [404, 409, 422], true) ? $e->getCode() : 422;
+    $statusCode = in_array($e->getCode(), [404, 403, 409, 422], true) ? $e->getCode() : 422;
     sendApiJson($statusCode, [
         'success' => false,
         'message' => $e->getMessage(),

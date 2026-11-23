@@ -1,3 +1,9 @@
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background-color: var(--color-bg-default);
+  color: var(--color-text-primary);
+}
 /* Header részben használt stílusok */
 .header-content {
   background-color: var(--color-bg-surface-white);
@@ -33,6 +39,7 @@
 .nav {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 16px;
   list-style: none;
   padding: 0;
@@ -122,6 +129,267 @@
   font-size: 14px;
   color: var(--color-text-muted);
   margin-top: 40px !important;
+}
+/* Booking oldal fő stílusai */
+.booking-header-container {
+  background-image: url("../../public/assets/images/booking-header-background.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 500px;
+}
+
+.booking-header {
+  padding: 24px 0;
+  text-align: start;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+}
+.booking-title {
+  font-size: 45px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--color-text-gold);
+  font-family: var(--font-heading);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+.booking-subtitle {
+  font-size: 24px;
+  color: #fff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.booking-form {
+  background-color: var(--color-bg-surface-white);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  height: 100px;
+  border-radius: 25px;
+  position: relative;
+  transform: translateY(-50%);
+}
+
+@media (max-width: 767.98px) {
+  .booking-form {
+    height: auto;
+    transform: none;
+    margin-top: -50px;
+    margin-bottom: 24px;
+  }
+
+  .booking-btn {
+    min-height: 64px;
+  }
+}
+
+.booking-check-in,
+.booking-check-out,
+.booking-select {
+  border-right: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.booking-check-in-label,
+.booking-check-out-label,
+.booking-guests-label {
+  font-weight: 600;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  display: block;
+  text-align: center;
+}
+
+.booking-check-in-input,
+.booking-check-out-input,
+.booking-guests-select {
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: none;
+  text-align: center;
+  cursor: pointer;
+  outline: none;
+  box-shadow: none;
+}
+
+.booking-check-in-input,
+.booking-check-out-input,
+.booking-guests-select {
+  background-color: transparent;
+}
+
+.booking-check-in:hover,
+.booking-check-out:hover,
+.booking-select:hover,
+.booking-submit:hover,
+.booking-check-in:focus-within,
+.booking-check-out:focus-within,
+.booking-select:focus-within,
+.booking-submit:focus-within {
+  background-color: var(--color-bg-surface-tan);
+}
+
+.booking-submit {
+  padding: 0;
+}
+
+.booking-submit:hover {
+  border-top-right-radius: 25px;
+  border-bottom-right-radius: 25px;
+}
+
+.booking-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  font-style: italic;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background-color: transparent;
+}
+
+.booking-check-in:hover,
+.booking-check-in:focus-within {
+  border-top-left-radius: 25px;
+  border-bottom-left-radius: 25px;
+}
+
+.booking-check-out-input:hover-within,
+.booking-check-in-input:hover-within,
+.booking-guests-select:hover-within {
+  background-color: var(--color-bg-surface-tan);
+}
+
+.booking-check-in-input:focus,
+.booking-check-out-input:focus,
+.booking-guests-select:focus {
+  outline: none;
+  box-shadow: none;
+  background-color: var(--color-bg-surface-tan);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+.room-booking-btn {
+  width: 100%;
+  border: none;
+  padding: 8px 16px;
+  margin: 12px 0;
+  cursor: pointer;
+  border: 1px solid var(--color-accent-gold-bg);
+}
+
+.room-booking-btn:hover {
+  color: #3b331b;
+  background-color: var(--color-accent-gold-bg);
+}
+
+.room-card {
+  background-color: var(--color-bg-surface-white);
+  border: 0;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+.room-card .room-details-button {
+  border: 0;
+  border-radius: inherit;
+  color: inherit;
+}
+
+.room-results.has-results {
+  margin-bottom: 48px;
+}
+
+.information-section {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 400px;
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  background-color: var(--color-bg-surface-tan);
+  gap: 16px;
+}
+
+.information-card-highlight {
+  background-color: var(--color-bg-surface-white);
+  padding: 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.information-card-highlight h2 {
+  font-style: italic;
+  letter-spacing: 3px;
+}
+
+.highlight {
+  color: var(--color-accent-gold);
+}
+
+.information-card-highlight p {
+  margin: 10px 10px 10px 0;
+  color: var(--color-text-muted);
+}
+
+.information-card-highlight a {
+  color: var(--color-accent-gold);
+  text-decoration: none;
+}
+.information-card-highlight a:hover {
+  text-decoration: underline;
+}
+
+.information-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-rows: 1fr;
+  gap: 16px;
+  margin: 0;
+}
+
+.information-cards > .col-12 {
+  width: auto;
+  max-width: none;
+  padding: 0;
+}
+
+.information-card {
+  background-color: var(--color-bg-surface-white);
+  padding: 16px;
+  border-radius: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  margin-bottom: 16px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.information-card h4 {
+  font-style: italic;
+}
+
+.information-card p {
+  margin: 10px 10px 10px 0;
+  color: var(--color-text-muted);
+}
+
+.information-card,
+.information-card-highlight {
+  height: 100%;
+}
+
+@media (max-width: 767.98px) {
+  .information-cards {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Login oldal fő stílusai */

@@ -26,10 +26,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'A jelszónak legalább 8 karakter hosszúnak kell lennie.';
     }
 
-    if ($data['name'] === '') {
-        $error = 'A név megadása kötelező.';
-    }
-
     if ($error === null) {
         try {
             $pdo = getDatabaseConnection();
@@ -39,9 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         } catch (Exception $exception) {
             error_log($exception->getMessage());
-
             $error = 'A regisztráció nem sikerült. Ellenőrizd az adatokat, vagy próbáld újra később.';
-
         }
     }
 
@@ -55,10 +49,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Regisztráció</title>
-    <link rel="stylesheet" href="../../assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="../../css/main.css">
-    <link rel="stylesheet" href="../../css/components.css">
-    <link rel="stylesheet" href="../../css/variables.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/css/main.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/css/components.css">
+    <link rel="stylesheet" href="/hotel-booking-system/public/css/variables.css">
 </head>
 
 <body>
@@ -110,7 +104,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
         <?php require __DIR__ . '/../../../src/includes/footer.php'; ?>
     </main>
-        <script src="../../assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
+        <script src="/hotel-booking-system/public/assets/bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>

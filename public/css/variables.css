@@ -54,6 +54,7 @@
   --color-text-primary: #302f28; /* Főcímsorok (H1, H2, H3) és főszövegek */
   --color-text-secondary: #666459; /* Másodlagos leíró szövegek, opciók */
   --color-text-muted: #928f83; /* Halvány címkék, táblázat fejlécek */
+  --color-text-gold: #cfad7b; /* Arany szöveg */
   --color-text-white: #ffffff; /* Fehér szöveg sötét alapon */
   --color-text-light-muted: #b5b3a8; /* Halvány szöveg sötét alapon (pl. admin oldalsáv) */
 
