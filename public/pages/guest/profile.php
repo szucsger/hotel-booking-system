@@ -1,11 +1,13 @@
 
 <?php
+
 session_start();
 
 require_once __DIR__ . '/../../../src/config/pdo.php';
 require_once __DIR__ . '/../../../src/services/authservice.php';
+require_once __DIR__ . '/../../../src/services/guestservice.php';
 
-// Bejelentkezett felhasználó ellenőrzése
+// 1. Bejelentkezett felhasználó ellenőrzése
 $user = AuthService::getAuthenticatedUser();
 
 if ($user === null || $user['role'] !== 'user') {
@@ -13,105 +15,138 @@ if ($user === null || $user['role'] !== 'user') {
     exit;
 }
 
-// Adatbázis-kapcsolat
-$pdo = getDatabaseConnection();
+// 2. GuestService példányosítása
+$guestService = new GuestService();
 
-// Jelszó módosítása
-if (isset($_POST['change_password'])) {
+// 3. CSRF-token létrehozása
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
 
-    $currentPassword = $_POST['current_password'];
-    $newPassword = $_POST['new_password'];
-    $confirmPassword = $_POST['confirm_password'];
+$csrfToken = $_SESSION['csrf_token'];
 
-    // Jelenlegi jelszó lekérése
-    $stmt = $pdo->prepare("
-        SELECT password_hash
-        FROM users
-        WHERE id = :id
-        AND is_deleted = 0
-    ");
+// Üzenetek
+$profileError = null;
+$passwordError = null;
+$passwordSuccess = null;
 
-    $stmt->execute([
-        'id' => $user['id']
-    ]);
+// 4. Űrlapok feldolgozása
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $passwordData = $stmt->fetch(PDO::FETCH_ASSOC);
+    // CSRF-token ellenőrzése
+    $submittedToken = $_POST['csrf_token'] ?? '';
 
+    if (
+        !is_string($submittedToken) ||
+        !hash_equals($_SESSION['csrf_token'], $submittedToken)
+    ) {
+        http_response_code(403);
+        die('Érvénytelen biztonsági token!');
+    }
 
+    // 5. Profiladatok mentése
+    if (isset($_POST['save_profile'])) {
 
-    if (!password_verify($currentPassword, $passwordData['password_hash'])) {
-        $passwordError = "A jelenlegi jelszó hibás.";
-    } elseif ($newPassword !== $confirmPassword) {
-        $passwordError = "Az új jelszavak nem egyeznek.";
-    } elseif (strlen($newPassword) < 8) {
-        $passwordError = "Az új jelszónak legalább 8 karakteresnek kell lennie.";
-    } else {
+        $name = trim($_POST['name'] ?? '');
+        $phoneNumber = trim($_POST['phone_number'] ?? '');
+        $birthDate = trim($_POST['birth_date'] ?? '');
+        $nationality = trim($_POST['nationality'] ?? '');
+        $address = trim($_POST['address'] ?? '');
 
-        $newHash = password_hash($newPassword, PASSWORD_DEFAULT);
+        // Szerveroldali adatellenőrzés
+        if ($name === '') {
+            $profileError = 'A név megadása kötelező.';
+        } elseif (mb_strlen($name) > 100) {
+            $profileError = 'A név maximum 100 karakter lehet.';
+        } elseif (mb_strlen($phoneNumber) > 30) {
+            $profileError = 'A telefonszám túl hosszú.';
+        } elseif (mb_strlen($nationality) > 80) {
+            $profileError = 'Az állampolgárság maximum 80 karakter lehet.';
+        } elseif (mb_strlen($address) > 255) {
+            $profileError = 'A lakcím maximum 255 karakter lehet.';
+        }
 
-        $stmt = $pdo->prepare("
-            UPDATE users
-            SET password_hash = :password_hash
-            WHERE id = :id
-        ");
+        // Születési dátum ellenőrzése
+        if ($profileError === null && $birthDate !== '') {
 
-        $stmt->execute([
-            'password_hash' => $newHash,
-            'id' => $user['id']
-        ]);
+            $date = DateTime::createFromFormat('!Y-m-d', $birthDate);
 
-        $passwordSuccess = "A jelszó sikeresen módosult.";
+            if (
+                !$date ||
+                $date->format('Y-m-d') !== $birthDate ||
+                $date > new DateTime('today')
+            ) {
+                $profileError = 'Érvénytelen születési dátum.';
+            }
+        }
+
+        // Ha minden adat megfelelő, mentés
+        if ($profileError === null) {
+
+            $profileData = [
+                'name' => $name,
+                'phone_number' => $phoneNumber,
+                'birth_date' => $birthDate,
+                'nationality' => $nationality,
+                'address' => $address
+            ];
+
+            $saved = $guestService->updateProfile(
+                $user['id'],
+                $profileData
+            );
+
+            if ($saved) {
+
+                $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+                header('Location: profile.php?saved=1');
+                exit;
+
+            } else {
+                $profileError = 'A profil mentése nem sikerült.';
+            }
+        }
+    }
+
+    // 6. Jelszó módosítása
+    if (isset($_POST['change_password'])) {
+
+        $currentPassword = $_POST['current_password'] ?? '';
+        $newPassword = $_POST['new_password'] ?? '';
+        $confirmPassword = $_POST['confirm_password'] ?? '';
+
+        $result = $guestService->changePassword(
+            $user['id'],
+            $currentPassword,
+            $newPassword,
+            $confirmPassword
+        );
+
+        if ($result['success']) {
+
+            $passwordSuccess = $result['message'];
+
+            $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+
+            $csrfToken = $_SESSION['csrf_token'];
+
+        } else {
+            $passwordError = $result['message'];
+        }
     }
 }
-// Profiladatok mentése
-if (isset($_POST['save_profile'])) {
 
-    $sql = "
-        UPDATE users
-        SET
-            name = :name,
-            phone_number = :phone_number,
-            birth_date = :birth_date,
-            nationality = :nationality,
-            address = :address
-        WHERE id = :id
-        AND is_deleted = 0
-    ";
-
-    $stmt = $pdo->prepare($sql);
-
-    $stmt->execute([
-        'name' => trim($_POST['name']),
-        'phone_number' => trim($_POST['phone_number']),
-        'birth_date' => $_POST['birth_date'],
-        'nationality' => trim($_POST['nationality']),
-        'address' => trim($_POST['address']),
-        'id' => $user['id']
-    ]);
-
-    header('Location: profile.php?saved=1');
-    exit;
-}
-
-// Vendég adatainak lekérdezése
-$sql = "
-    SELECT name, email, phone_number, birth_date, nationality, address
-    FROM users
-    WHERE id = :id
-    AND is_deleted = 0
-    LIMIT 1
-";
-
-$stmt = $pdo->prepare($sql);
-$stmt->execute([
-    'id' => $user['id']
-]);
-
-$profile = $stmt->fetch(PDO::FETCH_ASSOC);
+// 7. Profiladatok lekérdezése
+$profile = $guestService->getUserProfile($user['id']);
 
 if (!$profile) {
     die('A felhasználói profil nem található.');
 }
+
+// Sikeres mentés üzenete
+$profileSuccess = isset($_GET['saved']) && $_GET['saved'] === '1';
+
 ?>
 
 <!DOCTYPE html>
@@ -142,8 +177,23 @@ if (!$profile) {
 
         <h4 class="mb-4">Személyes adatok</h4>
 
-       
+        <?php if ($profileSuccess): ?>
+            <div class="alert alert-success">
+                A profiladatok sikeresen módosultak.
+            </div>
+        <?php endif; ?>
+
+        <?php if ($profileError !== null): ?>
+            <div class="alert alert-danger">
+                <?= htmlspecialchars($profileError) ?>
+            </div>
+        <?php endif; ?>
+
+        <!-- Profiladatok módosítása -->
         <form method="POST" action="">
+
+            <input type="hidden" name="csrf_token"
+                   value="<?= htmlspecialchars($csrfToken) ?>">
 
             <div class="row g-3">
 
@@ -186,6 +236,7 @@ if (!$profile) {
             </div>
 
             <div class="mt-4">
+
                 <button type="button" id="editButton" class="btn btn-primary">
                     Szerkesztés
                 </button>
@@ -198,81 +249,87 @@ if (!$profile) {
                 <a href="guest.php" class="btn btn-secondary">
                     Vissza a főoldalra
                 </a>
+
             </div>
 
         </form>
+
         <!-- Jelszó módosítása -->
-<hr class="my-4">
+        <hr class="my-4">
 
-<h4 class="mb-4">Jelszó módosítása</h4>
+        <h4 class="mb-4">Jelszó módosítása</h4>
 
-<?php if (isset($passwordError)): ?>
-    <div class="alert alert-danger">
-        <?= htmlspecialchars($passwordError) ?>
-    </div>
-<?php endif; ?>
+        <?php if ($passwordError !== null): ?>
+            <div class="alert alert-danger">
+                <?= htmlspecialchars($passwordError) ?>
+            </div>
+        <?php endif; ?>
 
-<?php if (isset($passwordSuccess)): ?>
-    <div class="alert alert-success">
-        <?= htmlspecialchars($passwordSuccess) ?>
-    </div>
-<?php endif; ?>
+        <?php if ($passwordSuccess !== null): ?>
+            <div class="alert alert-success">
+                <?= htmlspecialchars($passwordSuccess) ?>
+            </div>
+        <?php endif; ?>
 
-<form method="POST" action="">
+        <form method="POST" action="">
 
-    <div class="row g-3">
+            <input type="hidden" name="csrf_token"
+                   value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
 
-        <div class="col-md-6">
-            <label class="form-label">Jelenlegi jelszó</label>
-            <input type="password"
-                   name="current_password"
-                   class="form-control"
-                   autocomplete="current-password"
-                   required>
-        </div>
+            <div class="row g-3">
 
-        <div class="col-md-6">
-            <label class="form-label">Új jelszó</label>
-            <input type="password"
-                   name="new_password"
-                   class="form-control"
-                   minlength="8"
-                   autocomplete="new-password"
-                   required>
-        </div>
+                <div class="col-md-6">
+                    <label class="form-label">Jelenlegi jelszó</label>
+                    <input type="password"
+                        name="current_password"
+                        class="form-control"
+                        autocomplete="current-password"
+                        required>
+                </div>
 
-        <div class="col-md-6">
-            <label class="form-label">Új jelszó megerősítése</label>
-            <input type="password"
-                   name="confirm_password"
-                   class="form-control"
-                   minlength="8"
-                   autocomplete="new-password"
-                   required>
-        </div>
+                <div class="col-md-6">
+                    <label class="form-label">Új jelszó</label>
+                    <input type="password"
+                        name="new_password"
+                        class="form-control"
+                        minlength="8"
+                        autocomplete="new-password"
+                        required>
+                </div>
 
-    </div>
+                <div class="col-md-6">
+                    <label class="form-label">Új jelszó megerősítése</label>
+                    <input type="password"
+                        name="confirm_password"
+                        class="form-control"
+                        minlength="8"
+                        autocomplete="new-password"
+                        required>
+                </div>
 
-    <div class="mt-4">
-        <button type="submit"
-                name="change_password"
-                value="1"
-                class="btn btn-primary">
-            Jelszó módosítása
-        </button>
-    </div>
+            </div>
 
-</form>
+            <div class="mt-4">
+                <button type="submit"
+                    name="change_password"
+                    value="1"
+                    class="btn btn-primary">
+                    Jelszó módosítása
+                </button>
+            </div>
+
+        </form>
 
     </div>
 
 </main>
+
 <script>
 document.getElementById('editButton').addEventListener('click', function () {
 
     const fields = document.querySelectorAll(
-    'input[name="name"], input[name="phone_number"], input[name="birth_date"], input[name="nationality"], input[name="address"]'
-);
+        'input[name="name"], input[name="phone_number"], input[name="birth_date"], input[name="nationality"], input[name="address"]'
+    );
 
     fields.forEach(function(field) {
         field.removeAttribute('readonly');
@@ -283,5 +340,6 @@ document.getElementById('editButton').addEventListener('click', function () {
 
 });
 </script>
+
 </body>
 </html>
