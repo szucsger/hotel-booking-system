@@ -3,7 +3,7 @@
 final class BookingService
 {
     /**
-     * Létrehoz egy vendég által leadott, jóváhagyásra váró foglalást.
+     * Létrehoz egy vendég által leadott és azonnal megerősített foglalást.
      * A user ID-t a hívó a bejelentkezett munkamenetből adja át.
      */
     public static function createGuestBooking(PDO $pdo, int $userId, array $input): int
@@ -108,14 +108,14 @@ final class BookingService
             $nights = $checkIn->diff($checkOut)->days;
             $totalPrice = $nights * (int) $room['price_per_night'];
 
-            // Az új vendégfoglalás jóváhagyásig pending állapotú.
+            // Az új vendégfoglalást azonnal megerősítjük.
             $stmt = $pdo->prepare("
                 INSERT INTO bookings
                     (user_id, room_id, check_in_date, check_out_date,
                      guest_count, total_price, status)
                 VALUES
                     (:user_id, :room_id, :check_in_date, :check_out_date,
-                     :guest_count, :total_price, 'pending')
+                     :guest_count, :total_price, 'confirmed')
             ");
             $stmt->execute([
                 'user_id' => $userId,

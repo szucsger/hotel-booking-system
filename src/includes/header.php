@@ -24,7 +24,7 @@
                 <div class="col-12 col-md-3 header-actions">
                     <div class="header-form">
                         <?php if (isset($_SESSION['user']) && is_array($_SESSION['user'])): ?>
-                            <a href="<?php echo $publicPath; ?>/pages/profile.php" class="btn profile-button nav-button profile-button" id="profile-button">Profil</a>
+                            <a href="<?php echo $publicPath; ?>/pages/guest/guest.php" class="btn profile-button nav-button profile-button" id="profile-button">Profil</a>
                             <form action="<?php echo $publicPath; ?>/pages/auth/logout.php" method="post">
                                 <input type="hidden" name="csrf_token"
                                     value="<?php echo htmlspecialchars($_SESSION['csrf_token'], ENT_QUOTES, 'UTF-8'); ?>">
