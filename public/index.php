@@ -12,6 +12,19 @@ $selectedGuestCount = is_string($_GET['guests'] ?? null) ? $_GET['guests'] : '2'
 $selectedCheckIn = is_string($_GET['checkin'] ?? null) ? $_GET['checkin'] : '';
 $selectedCheckOut = is_string($_GET['checkout'] ?? null) ? $_GET['checkout'] : '';
 
+$roomsImagesPrefixes = [
+    'Single Standard' => 'single-single-standard',
+    'Single Deluxe' => 'single-single-deluxe',
+    'Twin Standard' => 'twin-twin-standard',
+    'Double Standard' => 'double-double-standard',
+    'Double Superior' => 'double-double-superior',
+    'Deluxe King' => 'deluxe-deluxe-king',
+    'Executive Suite' => 'executive-executive-suite',
+    'Családi Szoba' => 'family-family-room',
+    'Panorámás Lakosztály' => 'panoramic-panoramic-suite',
+    'Elnöki Lakosztály' => 'presidential-presidential-suite',
+];
+
 if (isset($_GET['checkin'], $_GET['checkout'], $_GET['guests'])) {
     try {
         $result = ReceptionService::getAvailableRooms(getDatabaseConnection(), [
@@ -36,7 +49,6 @@ if (isset($_GET['checkin'], $_GET['checkout'], $_GET['guests'])) {
     <title>Hotel CityStar</title>
     <link rel="stylesheet" href="/hotel-booking-system/public/assets/bootstrap-5.3.8-dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="/hotel-booking-system/public/css/main.css">
-    <link rel="stylesheet" href="/hotel-booking-system/public/css/components.css">
     <link rel="stylesheet" href="/hotel-booking-system/public/css/variables.css">
 </head>
 <?php require __DIR__ . '/../src/includes/header.php'; ?>
@@ -87,6 +99,7 @@ if (isset($_GET['checkin'], $_GET['checkout'], $_GET['guests'])) {
                 <?php foreach ($rooms as $room): ?>
                 <div class="col-12 col-md-4">
                     <div class="card room-card">
+                        <?php $imagePrefix = $roomsImagesPrefixes[$room['room_type']] ?? null; ?>
                         <button type="button" class="btn p-0 text-start w-100 room-details-button"
                             data-room-number="<?php echo htmlspecialchars((string) $room['room_number'], ENT_QUOTES, 'UTF-8'); ?>"
                             data-room-type="<?php echo htmlspecialchars($room['room_type'], ENT_QUOTES, 'UTF-8'); ?>"
@@ -97,10 +110,13 @@ if (isset($_GET['checkin'], $_GET['checkout'], $_GET['guests'])) {
                             data-room-id="<?php echo (int) $room['id']; ?>"
                             data-check-in="<?php echo htmlspecialchars($selectedCheckIn, ENT_QUOTES, 'UTF-8'); ?>"
                             data-check-out="<?php echo htmlspecialchars($selectedCheckOut, ENT_QUOTES, 'UTF-8'); ?>"
-                            data-guest-count="<?php echo htmlspecialchars($selectedGuestCount, ENT_QUOTES, 'UTF-8'); ?>">
+                            data-guest-count="<?php echo htmlspecialchars($selectedGuestCount, ENT_QUOTES, 'UTF-8'); ?>"
+                            data-image-prefix="<?php echo htmlspecialchars($imagePrefix ?? '', ENT_QUOTES, 'UTF-8'); ?>">
+                             <?php if($imagePrefix !== null): ?>
+                        <img src="/hotel-booking-system/public/assets/images/rooms/<?php echo htmlspecialchars($imagePrefix, ENT_QUOTES, 'UTF-8'); ?>-01.png" class="card-img-top"
+                            alt="Szoba <?php echo htmlspecialchars((string) $room['room_number'], ENT_QUOTES, 'UTF-8'); ?>">
+                        <?php endif; ?>
                             <div class="card-body">
-                                <!-- <img src="/hotel-booking-system/public/assets/images/room1.jpg" class="card-img-top"
-                                    alt="Szoba 1"> -->
                                 <h5 class="card-title">Szoba
                                     <?php echo htmlspecialchars((string) $room['room_number'], ENT_QUOTES, 'UTF-8'); ?>
                                 </h5>
@@ -162,6 +178,16 @@ if (isset($_GET['checkin'], $_GET['checkout'], $_GET['guests'])) {
 
         <dialog id="room-details-dialog" class="reception-modal" aria-labelledby="room-details-title">
             <h2 class="reception-modal-title" id="room-details-title"></h2>
+            <div class="room-gallery">
+                <div class="room-gallery-viewer">
+                    <button type="button" class="room-gallery-nav" id="gallery-previous"
+                        aria-label="Előző kép">‹</button>
+                    <img id="gallery-main-image" src="" alt="">
+                    <button type="button" class="room-gallery-nav" id="gallery-next"
+                        aria-label="Következő kép">›</button>
+                </div>
+                <div id="gallery-thumbnails" class="room-gallery-thumbnails"></div>
+            </div>
             <p id="room-details-description"></p>
             <p>Férőhely: <span id="room-details-capacity"></span></p>
             <p>Ágytípus: <span id="room-details-bed-type"></span></p>

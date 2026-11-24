@@ -130,6 +130,7 @@ body {
   color: var(--color-text-muted);
   margin-top: 40px !important;
 }
+
 /* Booking oldal fő stílusai */
 .booking-header-container {
   background-image: url("../../public/assets/images/booking-header-background.jpg");
@@ -299,6 +300,11 @@ body {
   color: inherit;
 }
 
+.room-card .card-img-top {
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+}
+
 .room-results.has-results {
   margin-bottom: 48px;
 }
@@ -389,6 +395,93 @@ body {
 @media (max-width: 767.98px) {
   .information-cards {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Szobarészletező dialog galériája */
+#room-details-dialog {
+  width: min(56rem, calc(100vw - 2rem));
+}
+
+#room-details-dialog .room-gallery {
+  margin-bottom: 20px;
+  border-radius: 20px;
+}
+
+#room-details-dialog .room-gallery-viewer {
+  display: grid;
+  grid-template-columns: 2.75rem minmax(0, 1fr) 2.75rem;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+#room-details-dialog #gallery-main-image {
+  display: block;
+  width: 100%;
+  height: clamp(220px, 45vh, 480px);
+  border-radius: 8px;
+  background-color: var(--color-bg-main);
+  object-fit: contain;
+}
+
+#room-details-dialog .room-gallery-nav {
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--color-border-light);
+  border-radius: 50%;
+  background-color: var(--color-bg-surface-white);
+  color: var(--color-text-primary);
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+#room-details-dialog .room-gallery-nav:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+#room-details-dialog .room-gallery-thumbnails {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  overflow-x: auto;
+}
+
+#room-details-dialog .room-gallery-thumbnail {
+  flex: 0 0 5rem;
+  padding: 2px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+
+#room-details-dialog .room-gallery-thumbnail[aria-pressed="true"] {
+  border-color: var(--color-accent-gold);
+}
+
+#room-details-dialog .room-gallery-thumbnail img {
+  display: block;
+  width: 100%;
+  height: 3.5rem;
+  border-radius: 3px;
+  object-fit: cover;
+}
+
+@media (max-width: 480px) {
+  #room-details-dialog .room-gallery-viewer {
+    grid-template-columns: 2rem minmax(0, 1fr) 2rem;
+    gap: 0.25rem;
+  }
+
+  #room-details-dialog .room-gallery-nav {
+    width: 2rem;
+    height: 2rem;
+  }
+
+  #room-details-dialog #gallery-main-image {
+    height: 32vh;
   }
 }
 
@@ -535,7 +628,6 @@ body {
 .info-card {
   background-color: var(--color-bg-surface-white);
   padding: 16px;
-  border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   border-radius: 20px;
 }
@@ -760,7 +852,7 @@ body {
   margin: auto;
   padding: 24px;
   border: 1px solid var(--color-border-light);
-  border-radius: 8px;
+  border-radius: 20px;
   background-color: var(--color-bg-surface-white);
   color: var(--color-text-primary);
   box-shadow: 0 16px 48px rgba(37, 36, 31, 0.22);

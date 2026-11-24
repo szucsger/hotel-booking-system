@@ -20,3 +20,7 @@ composer.lock
 # Temporary files
 *.tmp
 *.temp
+
+#bootstrap temporary files
+/public/assets/bootstrap-5.3.8-dist/
+

@@ -83,7 +83,7 @@ try {
 
         sendApiJson(201, [
             'success' => true,
-            'message' => 'A foglalási kérelmet elküldtük, jóváhagyásra vár.',
+            'message' => 'A foglalás sikeresen megerősítve.',
             'booking_id' => $bookingId,
         ]);
         case 'reception.search_guest':
